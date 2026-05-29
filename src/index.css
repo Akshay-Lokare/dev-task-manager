@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: Inter, 'Segoe UI', -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #52525b;
+}
+
+input, textarea, select, button {
+  font-family: inherit;
+}
+
+@layer components {
+  .app-shell {
+    @apply bg-canvas dark:bg-zinc-950;
+  }
+
+  .surface-panel {
+    @apply bg-panel dark:bg-zinc-900 border border-line dark:border-zinc-800;
+  }
+
+  .surface-card {
+    @apply bg-white dark:bg-zinc-900/80 border border-line dark:border-zinc-800;
+  }
+
+  .surface-card-hover {
+    @apply hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-sm;
+  }
+
+  .task-list {
+    @apply bg-gradient-to-b from-white/50 via-canvas to-canvas dark:from-zinc-900/30 dark:via-zinc-950 dark:to-zinc-950;
+  }
+
+  .task-row {
+    @apply shadow-[0_1px_0_rgba(24,24,27,0.03)] dark:shadow-none hover:-translate-y-px;
+  }
+
+  .text-theme-ink {
+    @apply text-ink dark:text-zinc-100;
+  }
+
+  .text-theme-muted {
+    @apply text-muted dark:text-zinc-400;
+  }
+
+  .border-theme {
+    @apply border-line dark:border-zinc-800;
+  }
+
+  .input-field {
+    @apply w-full bg-canvas dark:bg-zinc-950 border border-line dark:border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-theme-ink placeholder:text-theme-muted focus:outline-none focus:border-pink-500 dark:focus:border-pink-400 focus:ring-2 focus:ring-pink-500/15 transition-all;
+  }
+
+  .select-field {
+    @apply rounded-lg border border-line dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 py-1.5 text-[11px] text-theme-muted outline-none cursor-pointer shadow-sm transition-all hover:text-theme-ink hover:border-zinc-300 dark:hover:border-zinc-600 focus:border-pink-500 dark:focus:border-pink-400 focus:ring-2 focus:ring-pink-500/15;
+  }
+
+  .select-field option {
+    @apply bg-white text-ink dark:bg-zinc-900 dark:text-zinc-100;
+  }
+
+  .btn-primary {
+    @apply bg-btn-primary text-white hover:brightness-105 active:brightness-95 transition-all shadow-sm;
+  }
+
+  .btn-ghost {
+    @apply border border-line dark:border-zinc-700 text-theme-muted hover:text-theme-ink hover:bg-canvas dark:hover:bg-zinc-800 transition-colors;
+  }
+}

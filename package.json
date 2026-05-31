@@ -45,7 +45,7 @@
       "build/icon-256.png"
     ],
     "directories": {
-      "output": "release"
+      "output": "github-release"
     }
   }
 }

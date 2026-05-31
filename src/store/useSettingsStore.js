@@ -3,9 +3,9 @@ import { create } from 'zustand'
 const SETTINGS_KEY = 'settings'
 
 export const DEFAULT_COLUMN_LABELS = {
-  sprint: 'Sprint',
-  branch: 'Branch',
-  global: 'Global',
+  todo: 'Todo',
+  inprogress: 'Inprogress',
+  done: 'Completed',
 }
 
 const DEFAULT_SETTINGS = {
@@ -22,9 +22,9 @@ const readLocalSettings = () => {
 }
 
 const normalizeColumnLabels = (labels) => ({
-  sprint: labels?.sprint?.trim() || DEFAULT_COLUMN_LABELS.sprint,
-  branch: labels?.branch?.trim() || DEFAULT_COLUMN_LABELS.branch,
-  global: labels?.global?.trim() || DEFAULT_COLUMN_LABELS.global,
+  todo: labels?.todo?.trim() || DEFAULT_COLUMN_LABELS.todo,
+  inprogress: labels?.inprogress?.trim() || DEFAULT_COLUMN_LABELS.inprogress,
+  done: labels?.done?.trim() || DEFAULT_COLUMN_LABELS.done,
 })
 
 const normalizeSettings = (settings) => ({

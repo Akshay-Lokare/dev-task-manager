@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 
+import { todayDateString } from '../utils/dates'
+
 const STORE_KEY = 'tasks'
 
 const persist = async (tasks) => {
@@ -22,9 +24,21 @@ const load = async () => {
   }
 }
 
-const getTaskTime = (task) => {
-  const value = Date.parse(task.createdAt ?? task.updatedAt ?? '')
+const getDoneTaskExpiryTime = (task) => {
+  const endValue = task.endDate ? Date.parse(`${task.endDate}T12:00:00`) : NaN
+  if (!Number.isNaN(endValue)) return endValue
+  const value = Date.parse(task.updatedAt ?? task.createdAt ?? '')
   return Number.isNaN(value) ? Date.now() : value
+}
+
+const applyStatusDates = (task, status) => {
+  const next = { ...task, status }
+  if (status === 'done') {
+    next.endDate = todayDateString()
+  } else if (task.status === 'done') {
+    next.endDate = ''
+  }
+  return next
 }
 
 const useTaskStore = create((set, get) => ({
@@ -46,33 +60,51 @@ const useTaskStore = create((set, get) => ({
       id: uuidv4(),
       title: taskData.title.trim(),
       description: taskData.description?.trim() ?? '',
-      status: 'todo',
+      status: taskData.status ?? 'todo',
       type: taskData.type,           // 'sprint' | 'branch' | 'global'
       sprintName: taskData.sprintName?.trim() ?? '',
       branchName: taskData.branchName?.trim() ?? '',
       assignedTo: taskData.assignedTo?.trim() ?? '',
+      priority: taskData.priority ?? 'mid',
+      startDate: todayDateString(),
+      endDate: '',
       notes: taskData.notes?.trim() ?? '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
-    const tasks = [...get().tasks, task]
+    const tasks = [task, ...get().tasks]
     set({ tasks })
     await persist(tasks)
     return task
   },
 
   updateTask: async (id, updates) => {
-    const tasks = get().tasks.map((t) =>
-      t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t
-    )
+    const tasks = get().tasks.map((t) => {
+      if (t.id !== id) return t
+      const { endDate: _endDate, ...safeUpdates } = updates
+      let next = { ...t, ...safeUpdates, updatedAt: new Date().toISOString() }
+      if ('startDate' in updates) next.startDate = updates.startDate?.trim() ?? ''
+      if ('status' in updates) next = applyStatusDates(next, updates.status)
+      return next
+    })
     set({ tasks })
     await persist(tasks)
   },
 
   toggleStatus: async (id) => {
+    const tasks = get().tasks.map((t) => {
+      if (t.id !== id) return t
+      const status = t.status === 'todo' ? 'done' : 'todo'
+      return { ...applyStatusDates(t, status), updatedAt: new Date().toISOString() }
+    })
+    set({ tasks })
+    await persist(tasks)
+  },
+
+  setStatus: async (id, status) => {
     const tasks = get().tasks.map((t) =>
       t.id === id
-        ? { ...t, status: t.status === 'todo' ? 'done' : 'todo', updatedAt: new Date().toISOString() }
+        ? { ...applyStatusDates(t, status), updatedAt: new Date().toISOString() }
         : t
     )
     set({ tasks })
@@ -98,7 +130,10 @@ const useTaskStore = create((set, get) => ({
     if (!hours || hours <= 0) return 0
 
     const cutoff = Date.now() - hours * 60 * 60 * 1000
-    const tasks = get().tasks.filter((task) => getTaskTime(task) > cutoff)
+    const tasks = get().tasks.filter((task) => {
+      if ((task.status ?? 'todo') !== 'done') return true
+      return getDoneTaskExpiryTime(task) > cutoff
+    })
     const removedCount = get().tasks.length - tasks.length
 
     if (removedCount > 0) {

@@ -4,6 +4,13 @@ import {
   IconPencil as TablerPencil,
   IconSun as TablerSun,
   IconTrash as TablerTrash,
+  IconChevronDown,
+  IconMinus,
+  IconFlame,
+  IconFilter as TablerFilter,
+  IconInbox,
+  IconProgress,
+  IconCircleCheck,
 } from '@tabler/icons-react'
 
 function sizeFromClass(className = 'w-4 h-4') {
@@ -96,6 +103,44 @@ export function IconLoading({ className = 'w-4 h-4' }) {
 
 export function IconEmpty({ className = 'w-5 h-5' }) {
   return <SoapBubbles className={className} />
+}
+
+export function IconChevronDownSmall({ className = 'w-3 h-3' }) {
+  return <IconChevronDown className={className} size={sizeFromClass(className)} stroke={2.2} />
+}
+
+export function IconFilter({ className = 'w-3.5 h-3.5' }) {
+  return <TablerFilter className={className} size={sizeFromClass(className)} stroke={2} />
+}
+
+export function IconPriorityLow({ className = 'w-4 h-4' }) {
+  return <IconChevronDown className={className} size={sizeFromClass(className)} stroke={2.2} />
+}
+
+export function IconPriorityMid({ className = 'w-4 h-4' }) {
+  return <IconMinus className={className} size={sizeFromClass(className)} stroke={2.2} />
+}
+
+export function IconPriorityHigh({ className = 'w-4 h-4' }) {
+  return <IconFlame className={className} size={sizeFromClass(className)} stroke={2} />
+}
+
+export function IconColumnTodo({ className = 'w-3.5 h-3.5' }) {
+  return <IconInbox className={className} size={sizeFromClass(className)} stroke={2} />
+}
+
+export function IconColumnInprogress({ className = 'w-3.5 h-3.5' }) {
+  return <IconProgress className={className} size={sizeFromClass(className)} stroke={2} />
+}
+
+export function IconColumnDone({ className = 'w-3.5 h-3.5' }) {
+  return <IconCircleCheck className={className} size={sizeFromClass(className)} stroke={2} />
+}
+
+export const COLUMN_ICONS = {
+  todo: IconColumnTodo,
+  inprogress: IconColumnInprogress,
+  done: IconColumnDone,
 }
 
 export const TYPE_ICONS = {

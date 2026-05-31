@@ -1,116 +1,120 @@
-import React, { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import useTaskStore from '../store/useTaskStore'
 import useSettingsStore from '../store/useSettingsStore'
 import TaskCard from './TaskCard'
-import { IconEmpty, IconPaw, IconPlus, TYPE_ICONS } from './Icons'
-import { TYPE_THEME } from '../constants/typeTheme'
+import { IconEmpty, IconPlus, COLUMN_ICONS } from './Icons'
+import { sortTasksByPriority } from '../constants/priority'
+import { filterTasks, hasActiveFilters } from '../constants/taskFilters'
 
-export default function TaskColumn({ type, onAddTask, onEdit }) {
+const STATUS_THEME = {
+  todo: {
+    gradientClass: 'task-card-todo',
+    accentText: 'text-pink-600 dark:text-pink-400',
+    accentBg: 'bg-pink-100 dark:bg-pink-950/40',
+    assigneeChipClass: 'assignee-chip-todo',
+    columnLine: 'bg-pink-400',
+    countBg: 'bg-pink-100 text-pink-700 dark:bg-pink-950/50 dark:text-pink-300',
+    columnIconClass: 'column-icon-todo',
+  },
+  inprogress: {
+    gradientClass: 'task-card-inprogress',
+    accentText: 'text-violet-600 dark:text-violet-400',
+    accentBg: 'bg-violet-100 dark:bg-violet-950/40',
+    assigneeChipClass: 'assignee-chip-inprogress',
+    columnLine: 'bg-violet-500',
+    countBg: 'bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300',
+    columnIconClass: 'column-icon-inprogress',
+  },
+  done: {
+    gradientClass: 'task-card-done',
+    accentText: 'text-emerald-600 dark:text-emerald-400',
+    accentBg: 'bg-emerald-100 dark:bg-emerald-950/40',
+    assigneeChipClass: 'assignee-chip-done',
+    columnLine: 'bg-emerald-400',
+    countBg: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300',
+    columnIconClass: 'column-icon-done',
+  },
+}
+
+export default function TaskColumn({ status, onAddTask, onEdit, filters }) {
   const allTasks = useTaskStore((s) => s.tasks)
-  const columnLabel = useSettingsStore((s) => s.settings.columnLabels[type])
+  const setStatus = useTaskStore((s) => s.setStatus)
+  const columnLabel = useSettingsStore((s) => s.settings.columnLabels[status])
+  const filtersActive = hasActiveFilters(filters)
   const tasks = useMemo(
-    () => allTasks.filter((t) => t.type === type),
-    [allTasks, type]
+    () => sortTasksByPriority(
+      filterTasks(
+        allTasks.filter((t) => (t.status ?? 'todo') === status),
+        filters
+      )
+    ),
+    [allTasks, status, filters]
   )
-  const [filter, setFilter] = useState('all')
-  const [contextFilter, setContextFilter] = useState('all')
-  const meta = TYPE_THEME[type]
-  const TypeIcon = TYPE_ICONS[type]
+  const meta = STATUS_THEME[status]
+  const ColumnIcon = COLUMN_ICONS[status]
 
-  const contextLabels = type !== 'global'
-    ? [...new Set(tasks.map((t) => t[meta.contextKey]).filter(Boolean))]
-    : []
-
-  const filtered = tasks.filter((t) => {
-    const statusMatch = filter === 'all' || t.status === filter
-    const contextMatch =
-      contextFilter === 'all' ||
-      (type !== 'global' && t[meta.contextKey] === contextFilter)
-    return statusMatch && contextMatch
-  })
-
-  const todoTasks = filtered.filter((t) => t.status === 'todo')
-  const doneTasks = filtered.filter((t) => t.status === 'done')
-  const totalCount = tasks.length
+  const handleDrop = async (event) => {
+    event.preventDefault()
+    const taskId = event.dataTransfer.getData('text/plain')
+    if (taskId) {
+      await setStatus(taskId, status)
+    }
+  }
 
   return (
-    <section className="flex flex-col h-full min-h-0 relative">
-      <div className={`absolute inset-x-0 top-0 h-24 bg-gradient-to-b ${meta.headerGlow} pointer-events-none`} />
+    <section
+      className="flex flex-col h-full min-h-0 relative"
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={handleDrop}
+    >
+      <div className={`absolute left-0 top-0 bottom-0 w-px ${meta.columnLine} opacity-40`} />
 
-      <div className="relative px-6 py-5 border-b border-theme">
+      <div className="task-column-header">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className={`w-2.5 h-2.5 rounded-full ${meta.gradient} shadow-sm`} />
-            <div className="flex items-center gap-2">
-              <TypeIcon className={`w-5 h-5 ${meta.icon}`} />
-              <h2 className={`text-sm font-semibold bg-clip-text text-transparent ${meta.gradient}`}>
-                {columnLabel}
-              </h2>
-              <span className="text-xs text-theme-muted">{totalCount}</span>
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-[0.14em] text-theme-muted font-medium mb-0.5">
+              {status === 'todo' ? 'Queue' : status === 'inprogress' ? 'Active' : 'Finished'}
+            </p>
+            <div className="flex items-center gap-2 min-w-0">
+              <span className={`column-icon ${meta.columnIconClass}`} title={status === 'todo' ? 'Queue' : status === 'inprogress' ? 'Active' : 'Finished'}>
+                <ColumnIcon className="w-3.5 h-3.5" />
+              </span>
+              <h2 className="text-sm font-semibold text-theme-ink truncate">{columnLabel}</h2>
+              <span className={`text-[10px] font-medium tabular-nums px-1.5 py-0.5 rounded-md ${meta.countBg}`}>
+                {tasks.length}
+              </span>
             </div>
           </div>
           <button
-            onClick={() => onAddTask(type)}
-            className="w-9 h-9 flex items-center justify-center rounded-lg btn-ghost"
+            onClick={() => onAddTask('global', status)}
+            className="w-8 h-8 flex items-center justify-center rounded-lg btn-ghost text-theme-muted"
             title="Add task"
           >
-            <IconPlus className="w-6 h-6" />
+            <IconPlus className="w-4 h-4" />
           </button>
-        </div>
-
-        <div className="flex items-center gap-2 mt-4">
-          {['all', 'todo', 'done'].map((f, index) => (
-            <React.Fragment key={f}>
-              {index > 0 && <span className="h-3 w-px bg-line dark:bg-zinc-700" />}
-              <button
-                onClick={() => setFilter(f)}
-                className={`inline-flex items-center gap-1 text-[11px] capitalize transition-all px-2.5 py-1 rounded-md
-                  ${filter === f
-                    ? `${meta.activeFilter} font-medium`
-                    : 'text-theme-muted hover:text-theme-ink'}`}
-              >
-                <IconPaw className="w-3 h-3" />
-                {f}
-              </button>
-            </React.Fragment>
-          ))}
-
-          {contextLabels.length > 0 && (
-            <select
-              value={contextFilter}
-              onChange={(e) => setContextFilter(e.target.value)}
-              className="select-field ml-auto"
-            >
-              <option value="all">All {columnLabel}s</option>
-              {contextLabels.map((l) => (
-                <option key={l} value={l}>{l}</option>
-              ))}
-            </select>
-          )}
         </div>
       </div>
 
-      <div className="task-list relative flex-1 overflow-y-auto px-4 py-4 space-y-2 min-h-0">
-        {filtered.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center py-12">
-            <IconEmpty className={`w-10 h-10 ${meta.icon} opacity-40 mb-3`} />
-            <p className="text-xs text-theme-muted">No tasks</p>
+      <div className="task-list relative flex-1 overflow-y-auto px-3 py-3 space-y-1 min-h-0">
+        {tasks.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full text-center py-10 mx-1 rounded-xl border border-dashed border-line dark:border-zinc-800">
+            <IconEmpty className="w-8 h-8 text-theme-muted/30 mb-2" />
+            <p className="text-[11px] text-theme-muted">
+              {filtersActive ? 'No matching tasks' : 'Nothing here yet'}
+            </p>
           </div>
         )}
 
-        {todoTasks.map((task) => (
-          <TaskCard key={task.id} task={task} onEdit={onEdit} accentGradient={meta.gradient} accentText={meta.text} />
-        ))}
-
-        {todoTasks.length > 0 && doneTasks.length > 0 && (
-          <p className="text-[10px] text-theme-muted uppercase tracking-widest pt-4 pb-1 px-1 inline-flex items-center gap-1">
-            <IconPaw className="w-3 h-3" />
-            Done
-          </p>
-        )}
-
-        {doneTasks.map((task) => (
-          <TaskCard key={task.id} task={task} onEdit={onEdit} accentGradient={meta.gradient} accentText={meta.text} />
+        {tasks.map((task) => (
+          <TaskCard
+            key={task.id}
+            task={task}
+            onEdit={onEdit}
+            gradientClass={meta.gradientClass}
+            accentText={meta.accentText}
+            accentBg={meta.accentBg}
+            assigneeChipClass={meta.assigneeChipClass}
+          />
         ))}
       </div>
     </section>

@@ -5,6 +5,8 @@ node_modules/
 build/
 dist/
 release/
+installer/
+github-release/
 
 # Environment & secrets
 .env

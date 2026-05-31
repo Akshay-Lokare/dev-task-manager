@@ -53,11 +53,84 @@ input, textarea, select, button {
   }
 
   .task-list {
-    @apply bg-gradient-to-b from-white/50 via-canvas to-canvas dark:from-zinc-900/30 dark:via-zinc-950 dark:to-zinc-950;
+    @apply bg-canvas/60 dark:bg-zinc-950;
   }
 
-  .task-row {
-    @apply shadow-[0_1px_0_rgba(24,24,27,0.03)] dark:shadow-none hover:-translate-y-px;
+  .task-card {
+    @apply relative flex items-start gap-3 px-3.5 py-3 rounded-[10px] cursor-pointer
+      border border-transparent
+      transition-[background,box-shadow,border-color,transform,filter] duration-200 ease-out
+      hover:-translate-y-px hover:brightness-[1.02]
+      hover:shadow-task-hover dark:hover:shadow-task-hover-dark;
+  }
+
+  .task-card-todo {
+    background: linear-gradient(135deg, #fce7f3 0%, #fdf2f8 55%, #fafafa 100%);
+    border-color: rgba(236, 72, 153, 0.2);
+  }
+
+  .dark .task-card-todo {
+    background: linear-gradient(135deg, rgba(80, 7, 36, 0.55) 0%, rgba(15, 23, 42, 0.4) 100%);
+    border-color: rgba(236, 72, 153, 0.14);
+  }
+
+  .task-card-inprogress {
+    background: linear-gradient(135deg, #ede9fe 0%, #f5f3ff 55%, #fafafa 100%);
+    border-color: rgba(139, 92, 246, 0.2);
+  }
+
+  .dark .task-card-inprogress {
+    background: linear-gradient(135deg, rgba(46, 16, 101, 0.55) 0%, rgba(15, 23, 42, 0.4) 100%);
+    border-color: rgba(139, 92, 246, 0.14);
+  }
+
+  .task-card-done {
+    background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 55%, #f8fafc 100%);
+    border-color: rgba(52, 211, 153, 0.22);
+  }
+
+  .dark .task-card-done {
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.55) 0%, rgba(15, 23, 42, 0.4) 100%);
+    border-color: rgba(52, 211, 153, 0.14);
+  }
+
+  .task-column-header {
+    @apply relative px-5 py-4 border-b border-theme;
+  }
+
+  .column-icon {
+    @apply inline-flex items-center justify-center w-7 h-7 rounded-full flex-shrink-0 shadow-sm;
+  }
+
+  .column-icon-todo {
+    @apply bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300;
+  }
+
+  .column-icon-inprogress {
+    @apply bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300;
+  }
+
+  .column-icon-done {
+    @apply bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300;
+  }
+
+  .assignee-chip {
+    @apply px-1.5 py-0.5 rounded-md border font-medium;
+  }
+
+  .assignee-chip-todo {
+    @apply border-pink-500/75 dark:border-pink-600/65
+      bg-pink-300/85 dark:bg-pink-950/75 text-pink-950 dark:text-pink-200;
+  }
+
+  .assignee-chip-inprogress {
+    @apply border-violet-500/75 dark:border-violet-600/65
+      bg-violet-300/85 dark:bg-violet-950/75 text-violet-950 dark:text-violet-200;
+  }
+
+  .assignee-chip-done {
+    @apply border-emerald-500/75 dark:border-emerald-600/65
+      bg-emerald-300/85 dark:bg-emerald-950/75 text-emerald-950 dark:text-emerald-200;
   }
 
   .text-theme-ink {
@@ -76,12 +149,128 @@ input, textarea, select, button {
     @apply w-full bg-canvas dark:bg-zinc-950 border border-line dark:border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-theme-ink placeholder:text-theme-muted focus:outline-none focus:border-pink-500 dark:focus:border-pink-400 focus:ring-2 focus:ring-pink-500/15 transition-all;
   }
 
+  .input-field[type='date'] {
+    @apply text-[13px];
+  }
+
+  .input-field[type='date']::-webkit-calendar-picker-indicator {
+    @apply opacity-50 cursor-pointer dark:invert;
+  }
+
+  .task-date-input {
+    @apply h-6 rounded border border-line dark:border-zinc-700 bg-white dark:bg-zinc-900 px-1.5 text-[10px] text-theme-ink outline-none focus:border-pink-500 dark:focus:border-pink-400;
+  }
+
   .select-field {
-    @apply rounded-lg border border-line dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 py-1.5 text-[11px] text-theme-muted outline-none cursor-pointer shadow-sm transition-all hover:text-theme-ink hover:border-zinc-300 dark:hover:border-zinc-600 focus:border-pink-500 dark:focus:border-pink-400 focus:ring-2 focus:ring-pink-500/15;
+    @apply rounded-lg border border-line dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 py-2 text-[11px] text-theme-muted outline-none cursor-pointer shadow-sm transition-all hover:text-theme-ink hover:border-zinc-300 dark:hover:border-zinc-600 focus:border-violet-500 dark:focus:border-violet-400 focus:ring-2 focus:ring-violet-500/15;
   }
 
   .select-field option {
     @apply bg-white text-ink dark:bg-zinc-900 dark:text-zinc-100;
+  }
+
+  .filter-bar {
+    @apply px-8 py-2.5 border-b border-theme bg-canvas/50 dark:bg-zinc-950/40;
+  }
+
+  .filter-label {
+    @apply text-[10px] uppercase tracking-[0.14em] text-theme-muted font-medium;
+  }
+
+  .filter-group {
+    @apply inline-flex items-center gap-0.5 p-0.5 rounded-full bg-white/60 dark:bg-zinc-900/50 border border-line/80 dark:border-zinc-800/80;
+  }
+
+  .filter-toggle {
+    @apply inline-flex items-center justify-center rounded-full transition-all;
+  }
+
+  .filter-toggle:not(.filter-toggle-labeled) {
+    @apply w-7 h-7;
+  }
+
+  .filter-toggle-labeled {
+    @apply gap-1 h-7 px-2.5;
+  }
+
+  .filter-toggle-idle {
+    @apply text-theme-muted hover:text-theme-ink hover:bg-canvas dark:hover:bg-zinc-800;
+  }
+
+  .filter-toggle-active {
+    @apply shadow-sm;
+  }
+
+  .filter-tone-violet.filter-toggle-active {
+    @apply bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300;
+  }
+
+  .filter-tone-cyan.filter-toggle-active {
+    @apply bg-cyan-100 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300;
+  }
+
+  .filter-tone-teal.filter-toggle-active {
+    @apply bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300;
+  }
+
+  .filter-tone-indigo.filter-toggle-active {
+    @apply bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300;
+  }
+
+  .filter-tone-zinc.filter-toggle-active {
+    @apply bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200;
+  }
+
+  .filter-tone-amber.filter-toggle-active {
+    @apply bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300;
+  }
+
+  .filter-tone-rose.filter-toggle-active {
+    @apply bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300;
+  }
+
+  .filter-tone-pink.filter-toggle-active {
+    @apply bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300;
+  }
+
+  .filter-tone-emerald.filter-toggle-active {
+    @apply bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300;
+  }
+
+  .filter-pill {
+    @apply relative inline-flex items-center gap-1.5 h-7 max-w-[140px] pl-2.5 pr-2 rounded-full text-[11px] font-medium transition-all;
+  }
+
+  .filter-pill-idle {
+    @apply text-theme-muted border border-transparent hover:border-line dark:hover:border-zinc-700 hover:bg-white/70 dark:hover:bg-zinc-900/70 hover:text-theme-ink;
+  }
+
+  .filter-pill-active {
+    @apply border;
+  }
+
+  .filter-tone-cyan.filter-pill-active {
+    @apply bg-cyan-50 text-cyan-800 border-cyan-200/80 dark:bg-cyan-950/40 dark:text-cyan-200 dark:border-cyan-800/60;
+  }
+
+  .filter-tone-teal.filter-pill-active {
+    @apply bg-teal-50 text-teal-800 border-teal-200/80 dark:bg-teal-950/40 dark:text-teal-200 dark:border-teal-800/60;
+  }
+
+  .filter-tone-pink.filter-pill-active {
+    @apply bg-pink-50 text-pink-900 border-pink-200/80 dark:bg-pink-950/40 dark:text-pink-200 dark:border-pink-800/60;
+  }
+
+  .filter-pill-select {
+    @apply absolute inset-0 w-full h-full opacity-0 cursor-pointer;
+  }
+
+  .filter-clear {
+    @apply text-[11px] font-medium text-theme-muted hover:text-theme-ink px-2 py-1 rounded-md transition-colors hover:bg-white/70 dark:hover:bg-zinc-900/70;
+  }
+
+  .filter-count {
+    @apply text-[10px] tabular-nums text-theme-muted font-medium;
   }
 
   .btn-primary {

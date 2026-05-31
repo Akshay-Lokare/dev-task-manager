@@ -1,6 +1,6 @@
 {
   "name": "meowlogger",
-  "version": "1.0.1",
+  "version": "2.1.0",
   "description": "MeowLogger: a desktop dev task tracker built with Electron, React, and Vite",
   "main": "electron/main.js",
   "scripts": {

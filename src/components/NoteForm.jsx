@@ -1,8 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
 import useNotesStore from '../store/useNotesStore'
 import useTaskStore from '../store/useTaskStore'
+import useSettingsStore from '../store/useSettingsStore'
 import { IconClose, TYPE_ICONS } from './Icons'
-import { TYPE_THEME } from '../constants/typeTheme'
+import { NAME_PLACEHOLDERS_BY_MODE, normalizeUserMode } from '../constants/userMode'
+import { resolveTypeTheme } from '../utils/typeLabels'
+import NameAutocompleteInput, { filterNameSuggestions } from './NameAutocompleteInput'
 
 const NOTE_TYPES = ['sprint', 'branch']
 const SAVE_DELAY_MS = 600
@@ -10,6 +13,9 @@ const SAVE_DELAY_MS = 600
 export default function NoteForm({ onClose, editNote = null, defaultType = 'sprint' }) {
   const { addNote, updateNote } = useNotesStore()
   const getContextLabels = useTaskStore((s) => s.getContextLabels)
+  const typeLabels = useSettingsStore((s) => s.settings.typeLabels)
+  const userMode = useSettingsStore((s) => s.settings.userMode)
+  const namePlaceholders = NAME_PLACEHOLDERS_BY_MODE[normalizeUserMode(userMode)]
   const [type, setType] = useState(editNote?.type ?? defaultType)
   const [contextName, setContextName] = useState(editNote?.contextName ?? '')
   const [title, setTitle] = useState(editNote?.title ?? '')
@@ -22,7 +28,7 @@ export default function NoteForm({ onClose, editNote = null, defaultType = 'spri
   const saveTimerRef = useRef(null)
   const savedTimerRef = useRef(null)
 
-  const contextSuggestions = getContextLabels(type)
+  const contextSuggestions = filterNameSuggestions(getContextLabels(type), contextName)
 
   useEffect(() => {
     titleRef.current?.focus()
@@ -114,7 +120,7 @@ export default function NoteForm({ onClose, editNote = null, defaultType = 'spri
             <label className={labelClass}>Type</label>
             <div className="flex gap-2">
               {NOTE_TYPES.map((id) => {
-                const theme = TYPE_THEME[id]
+                const t = resolveTypeTheme(id, typeLabels)
                 const Icon = TYPE_ICONS[id]
                 const selected = type === id
                 return (
@@ -126,10 +132,10 @@ export default function NoteForm({ onClose, editNote = null, defaultType = 'spri
                       if (!noteId) setContextName('')
                     })}
                     className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg border text-xs transition-all
-                      ${selected ? theme.formSelected : theme.formIdle}`}
+                      ${selected ? t.formSelected : t.formIdle}`}
                   >
                     <Icon className="w-4 h-4" />
-                    {theme.label}
+                    {t.label}
                   </button>
                 )
               })}
@@ -137,20 +143,16 @@ export default function NoteForm({ onClose, editNote = null, defaultType = 'spri
           </div>
 
           <div>
-            <label className={labelClass}>{TYPE_THEME[type].contextLabel} name</label>
-            <input
-              type="text"
-              list={`note-${type}-suggestions`}
-              placeholder={type === 'sprint' ? 'Sprint 12' : 'feat/login'}
+            <label className={labelClass}>{resolveTypeTheme(type, typeLabels).contextLabel} name</label>
+            <NameAutocompleteInput
               value={contextName}
-              onChange={(event) => markDirty(() => setContextName(event.target.value))}
-              className={`input-field ${type === 'branch' ? 'font-mono text-[13px]' : ''}`}
+              onChange={(value) => markDirty(() => setContextName(value))}
+              suggestions={contextSuggestions}
+              placeholder={
+                type === 'sprint' ? namePlaceholders.sprint : namePlaceholders.branch
+              }
+              inputClassName={`input-field ${type === 'branch' && userMode === 'dev' ? 'font-mono text-[13px]' : ''}`}
             />
-            <datalist id={`note-${type}-suggestions`}>
-              {contextSuggestions.map((label) => (
-                <option key={label} value={label} />
-              ))}
-            </datalist>
           </div>
 
           <div>

@@ -2,16 +2,13 @@ import React, { useEffect, useMemo, useState } from 'react'
 import useNotesStore from '../store/useNotesStore'
 import useTaskStore from '../store/useTaskStore'
 import useThemeStore from '../store/useThemeStore'
+import useSettingsStore from '../store/useSettingsStore'
 import NoteForm from './NoteForm'
 import AppHeader from './AppHeader'
 import { IconEmpty, IconLoading, IconNote, IconPlus, IconTrash, TYPE_ICONS } from './Icons'
-import { TYPE_THEME } from '../constants/typeTheme'
+import { resolveTypeTheme } from '../utils/typeLabels'
 
-const FILTERS = [
-  { id: 'all', label: 'All' },
-  { id: 'sprint', label: 'Sprint' },
-  { id: 'branch', label: 'Branch' },
-]
+const FILTER_TYPES = ['sprint', 'branch']
 
 function formatDate(value) {
   const date = new Date(value)
@@ -24,6 +21,7 @@ export default function NotesPage({ onNavigate }) {
   const loadTasks = useTaskStore((s) => s.loadTasks)
   const tasksLoaded = useTaskStore((s) => s.loaded)
   const { theme, toggleTheme } = useThemeStore()
+  const typeLabels = useSettingsStore((s) => s.settings.typeLabels)
   const [filter, setFilter] = useState('all')
   const [formOpen, setFormOpen] = useState(false)
   const [editNote, setEditNote] = useState(null)
@@ -92,23 +90,30 @@ export default function NotesPage({ onNavigate }) {
 
       <div className="px-8 py-4 border-b border-theme surface-panel border-x-0">
         <div className="flex gap-2">
-          {FILTERS.map(({ id, label }) => {
+          <button
+            type="button"
+            onClick={() => setFilter('all')}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
+              ${filter === 'all'
+                ? 'bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300 ring-1 ring-violet-500/20'
+                : 'btn-ghost'}`}
+          >
+            All
+          </button>
+          {FILTER_TYPES.map((id) => {
+            const t = resolveTypeTheme(id, typeLabels)
+            const Icon = TYPE_ICONS[id]
             const active = filter === id
-            const theme = id === 'all' ? null : TYPE_THEME[id]
             return (
               <button
                 key={id}
                 type="button"
                 onClick={() => setFilter(id)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
-                  ${active
-                    ? id === 'all'
-                      ? 'bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300 ring-1 ring-violet-500/20'
-                      : theme.activeFilter
-                    : 'btn-ghost'}`}
+                  ${active ? t.activeFilter : 'btn-ghost'}`}
               >
-                {id !== 'all' && TYPE_ICONS[id] && React.createElement(TYPE_ICONS[id], { className: 'w-3.5 h-3.5' })}
-                {label}
+                <Icon className="w-3.5 h-3.5" />
+                {t.label}
               </button>
             )
           })}
@@ -118,9 +123,9 @@ export default function NotesPage({ onNavigate }) {
       <main className="flex-1 overflow-y-auto px-8 py-6 min-h-0">
         {filteredNotes.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center py-16">
-            <IconEmpty className="w-12 h-12 text-theme-muted/30 mb-3" />
+            <IconEmpty className="w-12 h-12 text-zinc-400/30 dark:text-zinc-500/30 mb-3" />
             <p className="text-sm text-theme-muted">No notes yet</p>
-            <p className="text-xs text-theme-muted/70 mt-1 max-w-xs">
+            <p className="text-xs text-zinc-500/70 dark:text-zinc-400/70 mt-1 max-w-xs">
               Capture context for a sprint or branch — decisions, blockers, reminders.
             </p>
             <button
@@ -134,7 +139,7 @@ export default function NotesPage({ onNavigate }) {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 max-w-6xl">
             {filteredNotes.map((note) => {
-              const theme = TYPE_THEME[note.type]
+              const theme = resolveTypeTheme(note.type, typeLabels)
               const Icon = TYPE_ICONS[note.type]
               return (
                 <article
@@ -177,7 +182,7 @@ export default function NotesPage({ onNavigate }) {
                     {note.content}
                   </p>
 
-                  <p className="mt-3 text-[10px] text-theme-muted/70">
+                  <p className="mt-3 text-[10px] text-zinc-500/70 dark:text-zinc-400/70">
                     Updated {formatDate(note.updatedAt ?? note.createdAt)}
                   </p>
                 </article>

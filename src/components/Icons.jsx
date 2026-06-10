@@ -5,9 +5,8 @@ import {
   IconSun as TablerSun,
   IconTrash as TablerTrash,
   IconChevronDown,
-  IconMinus,
-  IconFlame,
   IconFilter as TablerFilter,
+  IconTag as TablerTag,
   IconInbox,
   IconProgress,
   IconCircleCheck,
@@ -113,16 +112,59 @@ export function IconFilter({ className = 'w-3.5 h-3.5' }) {
   return <TablerFilter className={className} size={sizeFromClass(className)} stroke={2} />
 }
 
+export function IconTag({ className = 'w-3.5 h-3.5' }) {
+  return <TablerTag className={className} size={sizeFromClass(className)} stroke={2} />
+}
+
+const PRIORITY_BUBBLES = {
+  1: [{ cx: 7, cy: 7, r: 4.1 }],
+  2: [
+    { cx: 4.9, cy: 8.4, r: 3.3 },
+    { cx: 9.6, cy: 5.3, r: 2.7 },
+  ],
+  3: [
+    { cx: 3.4, cy: 9.1, r: 2.8 },
+    { cx: 7, cy: 5.6, r: 3.1 },
+    { cx: 10.6, cy: 8.7, r: 2.5 },
+  ],
+}
+
+function IconPriorityBubbles({ level = 1, className = 'w-4 h-4' }) {
+  const bubbles = PRIORITY_BUBBLES[level] ?? PRIORITY_BUBBLES[1]
+
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      aria-hidden
+    >
+      {bubbles.map((bubble) => (
+        <g key={`${bubble.cx}-${bubble.cy}`}>
+          <circle cx={bubble.cx} cy={bubble.cy} r={bubble.r} />
+          <path
+            d={`M${bubble.cx - bubble.r * 0.35} ${bubble.cy - bubble.r * 0.45}a${bubble.r * 0.22} ${bubble.r * 0.22} 0 0 1 ${bubble.r * 0.5} 0`}
+            opacity="0.55"
+          />
+        </g>
+      ))}
+    </svg>
+  )
+}
+
 export function IconPriorityLow({ className = 'w-4 h-4' }) {
-  return <IconChevronDown className={className} size={sizeFromClass(className)} stroke={2.2} />
+  return <IconPriorityBubbles level={1} className={className} />
 }
 
 export function IconPriorityMid({ className = 'w-4 h-4' }) {
-  return <IconMinus className={className} size={sizeFromClass(className)} stroke={2.2} />
+  return <IconPriorityBubbles level={2} className={className} />
 }
 
 export function IconPriorityHigh({ className = 'w-4 h-4' }) {
-  return <IconFlame className={className} size={sizeFromClass(className)} stroke={2} />
+  return <IconPriorityBubbles level={3} className={className} />
 }
 
 export function IconColumnTodo({ className = 'w-3.5 h-3.5' }) {

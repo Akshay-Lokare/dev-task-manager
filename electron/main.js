@@ -10,12 +10,21 @@ const devUrl = process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173'
 const appId = 'com.dev.tasktracker'
 
 const resolveIconPath = (fileName) => {
-  const packagedPath = path.join(process.resourcesPath, 'app.asar', 'build', fileName)
-  if (fs.existsSync(packagedPath)) return packagedPath
+  const candidates = [
+    path.join(process.resourcesPath, 'build', fileName),
+    path.join(process.resourcesPath, 'app.asar', 'build', fileName),
+    path.join(__dirname, '..', 'build', fileName),
+  ]
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate
+  }
+
   return path.join(__dirname, '..', 'build', fileName)
 }
 
-const iconPath = resolveIconPath('icon.png')
+const isWindows = process.platform === 'win32'
+const iconPath = resolveIconPath(isWindows ? 'icon.ico' : 'icon.png')
 const trayIconPath = resolveIconPath('icon-256.png')
 let mainWindow
 let tray

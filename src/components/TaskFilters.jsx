@@ -5,10 +5,11 @@ import {
   IconPriorityLow,
   IconPriorityMid,
   IconUser,
+  IconTag,
   COLUMN_ICONS,
   TYPE_ICONS,
 } from './Icons'
-import useSessionStore from '../store/useSessionStore'
+import useSettingsStore from '../store/useSettingsStore'
 import { DEFAULT_TASK_FILTERS, hasActiveFilters } from '../constants/taskFilters'
 import { resolveTypeTheme } from '../utils/typeLabels'
 
@@ -16,14 +17,14 @@ const TYPE_TOGGLE = [
   { value: 'all', label: 'All', Icon: IconFilter, tone: 'filter-tone-violet' },
   { value: 'todo', label: 'Todo', Icon: COLUMN_ICONS.todo, tone: 'filter-tone-pink' },
   { value: 'inprogress', label: 'Active', Icon: COLUMN_ICONS.inprogress, tone: 'filter-tone-violet' },
-  { value: 'done', label: 'Done', Icon: COLUMN_ICONS.done, tone: 'filter-tone-emerald' },
+  { value: 'done', label: 'Done', Icon: COLUMN_ICONS.done, tone: 'filter-tone-turquoise' },
 ]
 
 const PRIORITY_TOGGLE = [
   { value: 'all', label: 'All', Icon: IconFilter, tone: 'filter-tone-zinc' },
-  { value: 'low', label: 'Low', Icon: IconPriorityLow, tone: 'filter-tone-zinc' },
-  { value: 'mid', label: 'Mid', Icon: IconPriorityMid, tone: 'filter-tone-amber' },
-  { value: 'high', label: 'High', Icon: IconPriorityHigh, tone: 'filter-tone-rose' },
+  { value: 'low', label: 'Low', Icon: IconPriorityLow, tone: 'filter-tone-green' },
+  { value: 'mid', label: 'Mid', Icon: IconPriorityMid, tone: 'filter-tone-yellow' },
+  { value: 'high', label: 'High', Icon: IconPriorityHigh, tone: 'filter-tone-light-red' },
 ]
 
 function FilterToggleGroup({ items, value, onChange, title, showLabels = false }) {
@@ -81,10 +82,16 @@ function FilterPillSelect({ icon: Icon, tone, value, onChange, options, emptyLab
   )
 }
 
+
 export default function TaskFilters({ filters, onChange, options, visibleCount, totalCount }) {
-  const typeLabels = useSessionStore((s) => s.typeLabels)
+  const typeLabels = useSettingsStore((s) => s.settings.typeLabels)
   const sprintTheme = resolveTypeTheme('sprint', typeLabels)
   const branchTheme = resolveTypeTheme('branch', typeLabels)
+  const globalTheme = resolveTypeTheme('global', typeLabels)
+  const globalNameOptions = [
+    { value: 'all', label: `All ${globalTheme.label}` },
+    ...options.globalNames.map((name) => ({ value: name, label: name })),
+  ]
   const setFilter = (key) => (value) => onChange({ ...filters, [key]: value })
   const active = hasActiveFilters(filters)
 
@@ -101,6 +108,11 @@ export default function TaskFilters({ filters, onChange, options, visibleCount, 
   const assigneeOptions = [
     { value: 'all', label: 'Everyone' },
     ...options.assignees.map((name) => ({ value: name, label: name })),
+  ]
+
+  const tagOptions = [
+    { value: 'all', label: 'All tags' },
+    ...options.tags.map((name) => ({ value: name, label: name })),
   ]
 
   return (
@@ -133,6 +145,14 @@ export default function TaskFilters({ filters, onChange, options, visibleCount, 
 
         <div className="flex flex-wrap items-center gap-1.5">
           <FilterPillSelect
+            icon={TYPE_ICONS.global}
+            tone="filter-tone-indigo"
+            value={filters.globalName}
+            onChange={setFilter('globalName')}
+            options={globalNameOptions}
+            emptyLabel={globalTheme.label}
+          />
+          <FilterPillSelect
             icon={TYPE_ICONS.sprint}
             tone="filter-tone-cyan"
             value={filters.sprintName}
@@ -155,6 +175,14 @@ export default function TaskFilters({ filters, onChange, options, visibleCount, 
             onChange={setFilter('assignedTo')}
             options={assigneeOptions}
             emptyLabel="Assignee"
+          />
+          <FilterPillSelect
+            icon={IconTag}
+            tone="filter-tone-amber"
+            value={filters.tag}
+            onChange={setFilter('tag')}
+            options={tagOptions}
+            emptyLabel="Tag"
           />
         </div>
 

@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react'
 import useTaskStore from '../store/useTaskStore'
-import useSessionStore from '../store/useSessionStore'
+import useSettingsStore from '../store/useSettingsStore'
 import { IconClose, IconUser, TYPE_ICONS } from './Icons'
 import { PRIORITIES, PRIORITY_THEME } from '../constants/priority'
+import { NAME_PLACEHOLDERS_BY_MODE, normalizeUserMode } from '../constants/userMode'
 import { formatTaskDate, todayDateString } from '../utils/dates'
 import { resolveTypeTheme } from '../utils/typeLabels'
+import NameAutocompleteInput, { filterNameSuggestions } from './NameAutocompleteInput'
 
 const FORM_TYPES = ['sprint', 'branch', 'global']
 const SAVE_DELAY_MS = 600
@@ -23,21 +25,21 @@ function DetailRow({ label, value }) {
 }
 
 function CompletedTaskView({ task, onClose, onBackToProgress }) {
-  const typeLabels = useSessionStore((s) => s.typeLabels)
+  const typeLabels = useSettingsStore((s) => s.settings.typeLabels)
   const typeTheme = resolveTypeTheme(task.type, typeLabels)
   const TypeIcon = TYPE_ICONS[task.type]
   const priorityTheme = PRIORITY_THEME[task.priority ?? 'mid']
 
   return (
     <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-      <div className="rounded-xl border border-emerald-200/80 dark:border-emerald-800/60 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 space-y-3">
+      <div className="rounded-xl border border-teal-200/80 dark:border-teal-700/60 bg-teal-50/50 dark:bg-teal-400/10 p-4 space-y-3">
         <div className="flex items-center gap-2">
           <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium ${typeTheme.activeFilter}`}>
             <TypeIcon className="w-3.5 h-3.5" />
             {typeTheme.label}
           </span>
           <span className={`inline-flex items-center gap-1 text-[10px] font-medium ${priorityTheme.text}`}>
-            <priorityTheme.Icon className="w-3.5 h-3.5" />
+            <priorityTheme.Icon className="w-4 h-4" />
             {priorityTheme.label} priority
           </span>
         </div>
@@ -50,14 +52,15 @@ function CompletedTaskView({ task, onClose, onBackToProgress }) {
         <DetailRow label="Description" value={task.description} />
         <DetailRow
           label={typeTheme.contextLabel ? `${typeTheme.contextLabel} name` : null}
-          value={task.sprintName || task.branchName}
+          value={task.sprintName || task.branchName || task.globalName}
         />
         <DetailRow label="Assigned to" value={task.assignedTo} />
+        <DetailRow label="Tag" value={task.tag} />
         <DetailRow label="Start date" value={formatTaskDate(task.startDate)} />
 
         <div>
           <p className="block text-[11px] text-theme-muted mb-1">End date</p>
-          <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300 tabular-nums">
+          <p className="text-sm font-medium text-teal-700 dark:text-teal-300 tabular-nums">
             {formatTaskDate(task.endDate) || '—'}
           </p>
         </div>
@@ -80,8 +83,11 @@ function CompletedTaskView({ task, onClose, onBackToProgress }) {
 }
 
 export default function TaskForm({ onClose, editTask = null, defaultType = 'global', defaultStatus = 'todo' }) {
-  const { addTask, tasks, updateTask, setStatus: setTaskStatus } = useTaskStore()
-  const typeLabels = useSessionStore((s) => s.typeLabels)
+  const { addTask, tasks, updateTask, setStatus: setTaskStatus, getContextLabels } = useTaskStore()
+  const typeLabels = useSettingsStore((s) => s.settings.typeLabels)
+  const userMode = useSettingsStore((s) => s.settings.userMode)
+  const taskTags = useSettingsStore((s) => s.settings.taskTags)
+  const namePlaceholders = NAME_PLACEHOLDERS_BY_MODE[normalizeUserMode(userMode)]
   const isCompletedView = editTask?.status === 'done'
   const [type, setType] = useState(editTask?.type ?? defaultType)
   const [status, setStatus] = useState(editTask?.status ?? defaultStatus)
@@ -89,8 +95,11 @@ export default function TaskForm({ onClose, editTask = null, defaultType = 'glob
   const [description, setDescription] = useState(editTask?.description ?? '')
   const [sprintName, setSprintName] = useState(editTask?.sprintName ?? '')
   const [branchName, setBranchName] = useState(editTask?.branchName ?? '')
+  const [globalName, setGlobalName] = useState(editTask?.globalName ?? '')
   const [assignedTo, setAssignedTo] = useState(editTask?.assignedTo ?? '')
+  const [tag, setTag] = useState(editTask?.tag ?? '')
   const [priority, setPriority] = useState(editTask?.priority ?? 'mid')
+  const tagOptions = [...new Set([...(taskTags ?? []), tag].filter(Boolean))]
   const [startDate, setStartDate] = useState(editTask?.startDate ?? todayDateString())
   const [saveState, setSaveState] = useState('idle')
   const [taskId, setTaskId] = useState(editTask?.id ?? null)
@@ -99,7 +108,34 @@ export default function TaskForm({ onClose, editTask = null, defaultType = 'glob
   const taskIdRef = useRef(editTask?.id ?? null)
   const saveTimerRef = useRef(null)
   const savedTimerRef = useRef(null)
+  const formRef = useRef({
+    title,
+    description,
+    status,
+    type,
+    sprintName,
+    branchName,
+    globalName,
+    assignedTo,
+    tag,
+    priority,
+    startDate,
+  })
   const previousWorkflow = !isCompletedView && status === 'inprogress' ? PREVIOUS_WORKFLOW.inprogress : null
+
+  formRef.current = {
+    title,
+    description,
+    status,
+    type,
+    sprintName,
+    branchName,
+    globalName,
+    assignedTo,
+    tag,
+    priority,
+    startDate,
+  }
 
   const liveTask = taskId ? tasks.find((task) => task.id === taskId) ?? editTask : editTask
 
@@ -116,6 +152,10 @@ export default function TaskForm({ onClose, editTask = null, defaultType = 'glob
     })
     .slice(0, 5)
 
+  const sprintSuggestions = filterNameSuggestions(getContextLabels('sprint'), sprintName)
+  const branchSuggestions = filterNameSuggestions(getContextLabels('branch'), branchName)
+  const globalSuggestions = filterNameSuggestions(getContextLabels('global'), globalName)
+
   useEffect(() => {
     if (!isCompletedView) titleRef.current?.focus()
   }, [isCompletedView])
@@ -125,54 +165,82 @@ export default function TaskForm({ onClose, editTask = null, defaultType = 'glob
     window.clearTimeout(savedTimerRef.current)
   }, [])
 
-  useEffect(() => {
-    if (isCompletedView) return undefined
+  const executeSave = async () => {
+    const data = formRef.current
+    if (!data.title.trim() || isCompletedView) return false
 
+    setSaveState('saving')
+    const payload = {
+      title: data.title.trim(),
+      description: data.description,
+      status: data.status,
+      type: data.type,
+      sprintName: data.sprintName,
+      branchName: data.branchName,
+      globalName: data.globalName,
+      assignedTo: data.assignedTo.trim(),
+      priority: data.priority,
+      tag: data.tag,
+      startDate: data.startDate,
+    }
+
+    try {
+      if (taskIdRef.current) {
+        await updateTask(taskIdRef.current, payload)
+      } else {
+        const task = await addTask(payload)
+        taskIdRef.current = task.id
+        setTaskId(task.id)
+      }
+      setDirty(false)
+      setSaveState('saved')
+      window.clearTimeout(savedTimerRef.current)
+      savedTimerRef.current = window.setTimeout(() => setSaveState('idle'), 2000)
+      return true
+    } catch {
+      setSaveState('error')
+      return false
+    }
+  }
+
+  const scheduleSave = () => {
     window.clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = window.setTimeout(executeSave, SAVE_DELAY_MS)
+  }
 
-    if (!dirty) return undefined
+  useEffect(() => {
+    if (isCompletedView || !dirty) return undefined
 
     if (!title.trim()) {
       setSaveState('idle')
       return undefined
     }
 
-    saveTimerRef.current = window.setTimeout(async () => {
-      setSaveState('saving')
-      const payload = {
-        title: title.trim(),
-        description,
-        status,
-        type,
-        sprintName,
-        branchName,
-        assignedTo: assignedTo.trim(),
-        priority,
-        startDate,
-      }
-
-      try {
-        if (taskIdRef.current) {
-          await updateTask(taskIdRef.current, payload)
-        } else {
-          const task = await addTask(payload)
-          taskIdRef.current = task.id
-          setTaskId(task.id)
-        }
-        setSaveState('saved')
-        window.clearTimeout(savedTimerRef.current)
-        savedTimerRef.current = window.setTimeout(() => setSaveState('idle'), 2000)
-      } catch {
-        setSaveState('error')
-      }
-    }, SAVE_DELAY_MS)
-
+    scheduleSave()
     return () => window.clearTimeout(saveTimerRef.current)
-  }, [isCompletedView, dirty, type, status, title, description, sprintName, branchName, assignedTo, priority, startDate, addTask, updateTask])
+  }, [isCompletedView, dirty, type, status, title, description, sprintName, branchName, globalName, assignedTo, tag, priority, startDate])
 
   const markDirty = (updater) => {
     setDirty(true)
     updater()
+  }
+
+  const markDirtyAndSave = (patch, applyState) => {
+    setDirty(true)
+    applyState()
+    formRef.current = { ...formRef.current, ...patch }
+    if (formRef.current.title.trim()) {
+      window.clearTimeout(saveTimerRef.current)
+      void executeSave()
+    }
+  }
+
+  const handleClose = async () => {
+    window.clearTimeout(saveTimerRef.current)
+    if (title.trim() && dirty) {
+      await executeSave()
+    }
+    onClose()
   }
 
   const saveLabel = {
@@ -196,7 +264,7 @@ export default function TaskForm({ onClose, editTask = null, defaultType = 'glob
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 dark:bg-black/50 backdrop-blur-[1px]"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
       <div className="surface-panel rounded-xl w-full max-w-md mx-4 overflow-hidden shadow-xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-theme bg-gradient-to-r from-pink-500/5 via-transparent to-transparent dark:from-pink-500/10">
@@ -213,7 +281,7 @@ export default function TaskForm({ onClose, editTask = null, defaultType = 'glob
             )}
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="text-theme-muted hover:text-theme-ink transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-canvas dark:hover:bg-zinc-800"
           >
             <IconClose />
@@ -239,7 +307,7 @@ export default function TaskForm({ onClose, editTask = null, defaultType = 'glob
                     <button
                       key={id}
                       type="button"
-                      onClick={() => markDirty(() => setType(id))}
+                      onClick={() => markDirtyAndSave({ type: id }, () => setType(id))}
                       className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg border text-xs transition-all
                         ${selected ? t.formSelected : t.formIdle}`}
                     >
@@ -254,24 +322,34 @@ export default function TaskForm({ onClose, editTask = null, defaultType = 'glob
             {type === 'sprint' && (
               <div>
                 <label className={labelClass}>{resolveTypeTheme('sprint', typeLabels).contextLabel} name</label>
-                <input
-                  type="text"
-                  placeholder="Sprint 12"
+                <NameAutocompleteInput
                   value={sprintName}
-                  onChange={(e) => markDirty(() => setSprintName(e.target.value))}
-                  className="input-field"
+                  onChange={(value) => markDirty(() => setSprintName(value))}
+                  suggestions={sprintSuggestions}
+                  placeholder={namePlaceholders.sprint}
                 />
               </div>
             )}
             {type === 'branch' && (
               <div>
                 <label className={labelClass}>{resolveTypeTheme('branch', typeLabels).contextLabel} name</label>
-                <input
-                  type="text"
-                  placeholder="feat/login"
+                <NameAutocompleteInput
                   value={branchName}
-                  onChange={(e) => markDirty(() => setBranchName(e.target.value))}
-                  className="input-field font-mono text-[13px]"
+                  onChange={(value) => markDirty(() => setBranchName(value))}
+                  suggestions={branchSuggestions}
+                  placeholder={namePlaceholders.branch}
+                  inputClassName={`input-field ${userMode === 'dev' ? 'font-mono text-[13px]' : ''}`}
+                />
+              </div>
+            )}
+            {type === 'global' && (
+              <div>
+                <label className={labelClass}>{resolveTypeTheme('global', typeLabels).contextLabel} name</label>
+                <NameAutocompleteInput
+                  value={globalName}
+                  onChange={(value) => markDirty(() => setGlobalName(value))}
+                  suggestions={globalSuggestions}
+                  placeholder={namePlaceholders.global}
                 />
               </div>
             )}
@@ -299,7 +377,7 @@ export default function TaskForm({ onClose, editTask = null, defaultType = 'glob
               <input
                 type="date"
                 value={startDate}
-                onChange={(e) => markDirty(() => setStartDate(e.target.value))}
+                onChange={(e) => markDirtyAndSave({ startDate: e.target.value }, () => setStartDate(e.target.value))}
                 className="input-field py-2"
               />
             </div>
@@ -315,7 +393,7 @@ export default function TaskForm({ onClose, editTask = null, defaultType = 'glob
                     <button
                       key={level}
                       type="button"
-                      onClick={() => markDirty(() => setPriority(level))}
+                      onClick={() => markDirtyAndSave({ priority: level }, () => setPriority(level))}
                       className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg border text-xs font-medium transition-all
                         ${selected ? theme.selected : theme.idle}`}
                     >
@@ -325,6 +403,22 @@ export default function TaskForm({ onClose, editTask = null, defaultType = 'glob
                   )
                 })}
               </div>
+            </div>
+
+            <div>
+              <label className={labelClass}>Tag</label>
+              <select
+                value={tag}
+                onChange={(e) => markDirtyAndSave({ tag: e.target.value }, () => setTag(e.target.value))}
+                className="input-field py-2"
+              >
+                <option value="">None</option>
+                {tagOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
@@ -368,7 +462,7 @@ export default function TaskForm({ onClose, editTask = null, defaultType = 'glob
                   {previousWorkflow.label}
                 </button>
               )}
-              <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-lg btn-ghost text-sm">
+              <button type="button" onClick={handleClose} className="flex-1 py-2.5 rounded-lg btn-ghost text-sm">
                 Close
               </button>
             </div>

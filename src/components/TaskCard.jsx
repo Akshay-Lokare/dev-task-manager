@@ -1,6 +1,5 @@
-import { useState } from 'react'
 import useTaskStore from '../store/useTaskStore'
-import useSessionStore from '../store/useSessionStore'
+import useSettingsStore from '../store/useSettingsStore'
 import { IconPaw, IconTrash, IconUser } from './Icons'
 import { PRIORITY_THEME } from '../constants/priority'
 import { formatTaskDate, formatTaskDateRange } from '../utils/dates'
@@ -11,37 +10,23 @@ const NEXT_WORKFLOW = {
   inprogress: { status: 'done', label: 'Complete' },
 }
 
-const TYPE_LABEL = {
-  branch: 'B',
-  global: 'G',
-}
-
-function TypeBadge({ type, isDone, accentText, accentBg, typeLabel }) {
+function TypeBadge({ isDone, accentText, accentBg, typeLabel }) {
   const badgeClass = `flex-shrink-0 mt-0.5 w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-semibold tracking-tight
     ${isDone
-      ? 'bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500'
-      : `${accentText} ${accentBg}`}`
-
-  if (type === 'sprint') {
-    return (
-      <span className={badgeClass} title={typeLabel}>
-        <IconPaw className={`w-3 h-3 ${isDone ? 'opacity-60' : ''}`} />
-      </span>
-    )
-  }
+      ? 'bg-zinc-100 text-zinc-400 dark:bg-white/20 dark:text-white'
+      : `${accentText} ${accentBg} dark:bg-white/20 dark:text-white`}`
 
   return (
     <span className={badgeClass} title={typeLabel}>
-      {TYPE_LABEL[type] ?? 'G'}
+      <IconPaw className={`w-3 h-3 ${isDone ? 'opacity-60 dark:opacity-100' : ''}`} />
     </span>
   )
 }
 
-export default function TaskCard({ task, onEdit, gradientClass = 'task-card-todo', accentText = 'text-pink-600 dark:text-pink-400', accentBg = 'bg-pink-100 dark:bg-pink-950/40', assigneeChipClass = 'assignee-chip-todo' }) {
+export default function TaskCard({ task, onEdit, gradientClass = 'task-card-todo', accentText = 'text-pink-600 dark:text-pink-400', accentBg = 'bg-pink-100 dark:bg-pink-950/40', assigneeChipClass = 'assignee-chip-todo', tagChipClass = 'task-tag-chip-todo' }) {
   const { setStatus, deleteTask } = useTaskStore()
-  const typeLabels = useSessionStore((s) => s.typeLabels)
+  const typeLabels = useSettingsStore((s) => s.settings.typeLabels)
   const typeLabel = resolveTypeTheme(task.type, typeLabels).label
-  const [confirmDelete, setConfirmDelete] = useState(false)
   const currentStatus = task.status ?? 'todo'
   const isDone = currentStatus === 'done'
   const nextWorkflow = NEXT_WORKFLOW[currentStatus]
@@ -54,9 +39,11 @@ export default function TaskCard({ task, onEdit, gradientClass = 'task-card-todo
       ? task.sprintName
       : task.type === 'branch' && task.branchName
       ? task.branchName
+      : task.type === 'global' && task.globalName
+      ? task.globalName
       : null
 
-  const hasMeta = task.assignedTo || contextLabel || task.startDate || task.endDate
+  const hasMeta = task.tag || task.assignedTo || contextLabel || task.startDate || task.endDate
   const dateLabel = isDone
     ? formatTaskDateRange(task.startDate, task.endDate)
     : formatTaskDate(task.startDate)
@@ -66,16 +53,19 @@ export default function TaskCard({ task, onEdit, gradientClass = 'task-card-todo
       draggable
       onDragStart={(e) => e.dataTransfer.setData('text/plain', task.id)}
       onClick={() => onEdit(task)}
-      className={`group task-card ${gradientClass} ${isDone ? 'opacity-55 hover:opacity-75' : ''}`}
+      className={`group task-card ${gradientClass} ${isDone ? 'opacity-55 hover:opacity-75 dark:opacity-100' : ''}`}
     >
-      <TypeBadge type={task.type} isDone={isDone} accentText={accentText} accentBg={accentBg} typeLabel={typeLabel} />
+      <TypeBadge isDone={isDone} accentText={accentText} accentBg={accentBg} typeLabel={typeLabel} />
 
       <div className="flex-1 min-w-0 pt-px">
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className={`flex-shrink-0 ${isDone ? 'text-theme-muted' : priorityTheme.text}`} title={`${priorityTheme.label} priority`}>
-            <PriorityIcon className="w-3.5 h-3.5" />
+          <span
+            className={`flex-shrink-0 ${priorityTheme.text} ${isDone ? 'opacity-75' : ''}`}
+            title={`${priorityTheme.label} priority`}
+          >
+            <PriorityIcon className="w-4 h-4" />
           </span>
-          <p className={`text-[13px] leading-snug truncate ${isDone ? 'line-through text-theme-muted' : 'text-theme-ink font-medium'}`}>
+          <p className={`flex-1 min-w-0 text-[13px] leading-snug truncate ${isDone ? 'line-through text-theme-muted dark:text-white' : 'text-theme-ink font-medium'}`}>
             {task.title}
           </p>
         </div>
@@ -83,18 +73,27 @@ export default function TaskCard({ task, onEdit, gradientClass = 'task-card-todo
         {hasMeta && (
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
             {task.assignedTo && (
-              <span className={`assignee-chip ${assigneeChipClass} inline-flex items-center gap-1 text-[10px]`}>
-                <IconUser className="w-3 h-3 opacity-70" />
+              <span className={`assignee-chip ${assigneeChipClass} inline-flex items-center gap-1 text-[10px] dark:text-white dark:border-white/30 dark:bg-white/15`}>
+                <IconUser className="w-3 h-3 opacity-70 dark:opacity-100" />
                 {task.assignedTo}
               </span>
             )}
+            {task.tag && (
+              <span
+                className={`task-tag-chip ${tagChipClass} ${isDone ? 'opacity-80 dark:opacity-100' : ''}`}
+                title={`Tag: ${task.tag}`}
+              >
+                <span className="opacity-50">#</span>
+                {task.tag}
+              </span>
+            )}
             {dateLabel && (
-              <span className="text-[10px] text-theme-muted/80 tabular-nums">
+              <span className={`text-[10px] tabular-nums ${isDone ? 'text-zinc-500/80 dark:text-white/90' : 'text-zinc-500/80 dark:text-white/85'}`}>
                 {dateLabel}
               </span>
             )}
             {contextLabel && (
-              <span className="text-[10px] font-mono text-theme-muted/60 truncate max-w-[120px]">
+              <span className={`text-[10px] font-mono truncate max-w-[120px] ${isDone ? 'text-zinc-500/60 dark:text-white/80' : 'text-zinc-500/60 dark:text-white/75'}`}>
                 {contextLabel}
               </span>
             )}
@@ -106,25 +105,15 @@ export default function TaskCard({ task, onEdit, gradientClass = 'task-card-todo
         {nextWorkflow && (
           <button
             onClick={(e) => { e.stopPropagation(); setStatus(task.id, nextWorkflow.status) }}
-            className={`text-[10px] font-medium px-2 h-6 rounded-md transition-colors ${accentText}
-              ${accentBg} hover:brightness-95`}
+            className={`text-[10px] font-medium px-2 h-6 rounded-md transition-colors ${accentText} ${accentBg} hover:brightness-95 dark:text-white dark:bg-white/20 dark:hover:bg-white/30`}
           >
             {nextWorkflow.label}
           </button>
         )}
         <button
-          onClick={(e) => {
-            e.stopPropagation()
-            if (confirmDelete) deleteTask(task.id)
-            else {
-              setConfirmDelete(true)
-              setTimeout(() => setConfirmDelete(false), 2500)
-            }
-          }}
-          className={`w-6 h-6 flex items-center justify-center rounded-md transition-colors
-            ${confirmDelete
-              ? 'bg-red-50 text-danger dark:bg-red-950/30'
-              : 'text-zinc-300 hover:text-danger hover:bg-red-50 dark:text-zinc-600 dark:hover:bg-red-950/20'}`}
+          onClick={(e) => { e.stopPropagation(); deleteTask(task.id) }}
+          className="w-6 h-6 flex items-center justify-center rounded-md transition-colors text-zinc-300 hover:text-danger hover:bg-red-50 dark:text-white dark:hover:text-red-300 dark:hover:bg-white/15"
+          title="Delete task"
         >
           <IconTrash className="w-3.5 h-3.5" />
         </button>

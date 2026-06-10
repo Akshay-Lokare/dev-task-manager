@@ -12,6 +12,7 @@ const STATUS_THEME = {
     accentText: 'text-pink-600 dark:text-pink-400',
     accentBg: 'bg-pink-100 dark:bg-pink-950/40',
     assigneeChipClass: 'assignee-chip-todo',
+    tagChipClass: 'task-tag-chip-todo',
     columnLine: 'bg-pink-400',
     countBg: 'bg-pink-100 text-pink-700 dark:bg-pink-950/50 dark:text-pink-300',
     columnIconClass: 'column-icon-todo',
@@ -21,17 +22,19 @@ const STATUS_THEME = {
     accentText: 'text-violet-600 dark:text-violet-400',
     accentBg: 'bg-violet-100 dark:bg-violet-950/40',
     assigneeChipClass: 'assignee-chip-inprogress',
+    tagChipClass: 'task-tag-chip-inprogress',
     columnLine: 'bg-violet-500',
     countBg: 'bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300',
     columnIconClass: 'column-icon-inprogress',
   },
   done: {
     gradientClass: 'task-card-done',
-    accentText: 'text-emerald-600 dark:text-emerald-400',
-    accentBg: 'bg-emerald-100 dark:bg-emerald-950/40',
+    accentText: 'text-teal-600 dark:text-teal-400',
+    accentBg: 'bg-teal-100 dark:bg-teal-400/20',
     assigneeChipClass: 'assignee-chip-done',
-    columnLine: 'bg-emerald-400',
-    countBg: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300',
+    tagChipClass: 'task-tag-chip-done',
+    columnLine: 'bg-teal-400',
+    countBg: 'bg-teal-100 text-teal-700 dark:bg-teal-400/25 dark:text-teal-300',
     columnIconClass: 'column-icon-done',
   },
 }
@@ -85,20 +88,22 @@ export default function TaskColumn({ status, onAddTask, onEdit, filters }) {
               </span>
             </div>
           </div>
-          <button
-            onClick={() => onAddTask('global', status)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg btn-ghost text-theme-muted"
-            title="Add task"
-          >
-            <IconPlus className="w-4 h-4" />
-          </button>
+          {status === 'todo' && (
+            <button
+              onClick={() => onAddTask('global', status)}
+              className="w-8 h-8 flex items-center justify-center rounded-lg btn-ghost text-theme-muted"
+              title="Add task"
+            >
+              <IconPlus className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
       <div className="task-list relative flex-1 overflow-y-auto px-3 py-3 space-y-1 min-h-0">
         {tasks.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center py-10 mx-1 rounded-xl border border-dashed border-line dark:border-zinc-800">
-            <IconEmpty className="w-8 h-8 text-theme-muted/30 mb-2" />
+            <IconEmpty className="w-8 h-8 text-zinc-400/30 dark:text-zinc-500/30 mb-2" />
             <p className="text-[11px] text-theme-muted">
               {filtersActive ? 'No matching tasks' : 'Nothing here yet'}
             </p>
@@ -114,6 +119,7 @@ export default function TaskColumn({ status, onAddTask, onEdit, filters }) {
             accentText={meta.accentText}
             accentBg={meta.accentBg}
             assigneeChipClass={meta.assigneeChipClass}
+            tagChipClass={meta.tagChipClass}
           />
         ))}
       </div>

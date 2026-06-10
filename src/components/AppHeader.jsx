@@ -5,10 +5,10 @@ import appPackage from '../../package.json'
 const BASE_NAV_ITEMS = [
   { id: 'board', label: 'Board' },
   { id: 'notes', label: 'Notes' },
-  { id: 'analytics', label: 'Analytics' },
+  { id: 'settings', label: 'Settings' },
 ]
 
-const HIDDEN_NAV_ITEM = { id: 'hidden-settings', label: 'Sections' }
+const HIDDEN_NAV_ITEM = { id: 'analytics', label: 'Analytics' }
 
 function NavButton({ id, label, page, onNavigate, compact = false }) {
   const active = page === id
@@ -62,7 +62,7 @@ export default function AppHeader({ page, onNavigate, subtitle, theme, onToggleT
           <div className="min-w-0">
             <h1 className="text-lg font-semibold tracking-tight text-theme-ink">MeowLogger</h1>
             <p className="text-xs text-theme-muted mt-0.5 truncate">{subtitle}</p>
-            <p className="text-[10px] text-theme-muted/80 mt-0.5">v{appVersion}</p>
+            <p className="text-[10px] text-zinc-500/80 dark:text-zinc-400/80 mt-0.5">v{appVersion}</p>
           </div>
         </div>
 

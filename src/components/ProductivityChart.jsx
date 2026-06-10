@@ -45,7 +45,7 @@ export default function ProductivityChart({ tasks, dayCount }) {
     return (
       <div className="surface-panel rounded-xl p-8 text-center">
         <p className="text-sm text-theme-muted">No completed tasks in this period</p>
-        <p className="text-xs text-theme-muted/70 mt-1">
+        <p className="text-xs text-zinc-500/70 dark:text-zinc-400/70 mt-1">
           Finish tasks on the board to see daily productivity here.
         </p>
       </div>
@@ -155,7 +155,7 @@ export default function ProductivityChart({ tasks, dayCount }) {
             return (
               <span
                 key={`${point.date}-label`}
-                className="absolute -translate-x-1/2 text-[9px] sm:text-[10px] text-theme-muted/80 tabular-nums leading-none whitespace-nowrap"
+                className="absolute -translate-x-1/2 text-[9px] sm:text-[10px] text-zinc-500/80 dark:text-zinc-400/80 tabular-nums leading-none whitespace-nowrap"
                 style={{ left }}
               >
                 {point.label}

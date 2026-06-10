@@ -24,6 +24,8 @@
     "concurrently": "^9.1.2",
     "electron": "^33.2.1",
     "electron-builder": "^25.1.8",
+    "png-to-ico": "^3.0.1",
+    "rcedit": "^4.0.1",
     "postcss": "^8.4.49",
     "sharp": "^0.34.2",
     "tailwindcss": "^3.4.15",
@@ -33,19 +35,28 @@
   "build": {
     "appId": "com.dev.tasktracker",
     "productName": "MeowLogger",
-    "icon": "build/icon.png",
+    "directories": {
+      "buildResources": "build",
+      "output": "github-release"
+    },
+    "icon": "build/icon.ico",
+    "afterPack": "scripts/electron-after-pack.cjs",
     "win": {
       "target": "nsis",
+      "icon": "build/icon.ico",
       "signAndEditExecutable": false
+    },
+    "nsis": {
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico"
     },
     "files": [
       "dist/**/*",
       "electron/**/*",
       "build/icon.png",
-      "build/icon-256.png"
-    ],
-    "directories": {
-      "output": "github-release"
-    }
+      "build/icon-256.png",
+      "build/icon.ico"
+    ]
   }
 }

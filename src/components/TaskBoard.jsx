@@ -7,44 +7,30 @@ import TaskColumn from './TaskColumn'
 import TaskForm from './TaskForm'
 import TaskFilters from './TaskFilters'
 import AppHeader from './AppHeader'
-import { IconLoading, IconPaw, IconPlus } from './Icons'
+import { IconLoading, IconPlus } from './Icons'
 import { DEFAULT_TASK_FILTERS, filterTasks, getTaskFilterOptions, hasActiveFilters } from '../constants/taskFilters'
 import { formatTypeLabelsSubtitle } from '../utils/typeLabels'
 
 export default function TaskBoard({ onNavigate }) {
-  const { deleteExpiredTasks, loadTasks, loaded, tasks } = useTaskStore()
-  const { loadSettings, loaded: settingsLoaded, settings, setAutoDeleteHours } = useSettingsStore()
+  const { loadTasks, loaded, tasks } = useTaskStore()
+  const typeLabels = useSettingsStore((s) => s.settings.typeLabels)
   const unlockEasterEgg = useSessionStore((s) => s.unlockEasterEgg)
-  const typeLabels = useSessionStore((s) => s.typeLabels)
   const { theme, toggleTheme } = useThemeStore()
   const [formOpen, setFormOpen] = useState(false)
   const [formType, setFormType] = useState('global')
   const [formStatus, setFormStatus] = useState('todo')
   const [editTask, setEditTask] = useState(null)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const [filters, setFilters] = useState(DEFAULT_TASK_FILTERS)
   const logoClickCountRef = useRef(0)
   const logoClickTimeoutRef = useRef(null)
 
   useEffect(() => {
-    loadTasks()
-    loadSettings()
-  }, [])
+    if (!loaded) loadTasks()
+  }, [loaded, loadTasks])
 
   useEffect(() => {
     return () => window.clearTimeout(logoClickTimeoutRef.current)
   }, [])
-
-  useEffect(() => {
-    if (!loaded || !settingsLoaded) return undefined
-
-    deleteExpiredTasks(settings.autoDeleteHours)
-    const interval = window.setInterval(() => {
-      deleteExpiredTasks(settings.autoDeleteHours)
-    }, 60 * 1000)
-
-    return () => window.clearInterval(interval)
-  }, [deleteExpiredTasks, loaded, settings.autoDeleteHours, settingsLoaded])
 
   const openAdd = (type = 'global', status = 'todo') => {
     setEditTask(null)
@@ -65,12 +51,17 @@ export default function TaskBoard({ onNavigate }) {
     setEditTask(null)
   }
 
+  const handleNavigate = (page) => {
+    closeForm()
+    onNavigate(page)
+  }
+
   const handleLogoClick = () => {
     logoClickCountRef.current += 1
 
     if (logoClickCountRef.current >= 5) {
       unlockEasterEgg()
-      onNavigate('hidden-settings')
+      handleNavigate('analytics')
       logoClickCountRef.current = 0
     }
 
@@ -88,7 +79,7 @@ export default function TaskBoard({ onNavigate }) {
   const filterOptions = getTaskFilterOptions(tasks)
   const filtersActive = hasActiveFilters(filters)
 
-  if (!loaded || !settingsLoaded) {
+  if (!loaded) {
     return (
       <div className="flex h-screen items-center justify-center app-shell">
         <div className="flex items-center gap-2 text-sm text-theme-muted">
@@ -103,7 +94,7 @@ export default function TaskBoard({ onNavigate }) {
     <div className="relative flex flex-col h-screen app-shell overflow-hidden">
       <AppHeader
         page="board"
-        onNavigate={onNavigate}
+        onNavigate={handleNavigate}
         onLogoClick={handleLogoClick}
         subtitle={
           filtersActive
@@ -115,51 +106,13 @@ export default function TaskBoard({ onNavigate }) {
         theme={theme}
         onToggleTheme={toggleTheme}
         actions={(
-          <>
-            <div className="relative">
-              <button
-                onClick={() => setSettingsOpen((value) => !value)}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg btn-ghost text-xs"
-                title="Settings"
-              >
-                <IconPaw className="w-4 h-4" />
-                {settings.autoDeleteHours === 0 ? 'Keep forever' : `${settings.autoDeleteHours}h cleanup`}
-              </button>
-
-              {settingsOpen && (
-                <div className="absolute right-0 top-11 z-40 w-64 rounded-xl surface-panel p-4 shadow-xl">
-                  <div className="flex items-center gap-2 text-theme-ink text-sm font-medium">
-                    <IconPaw className="w-4 h-4 text-pink-500" />
-                    Settings
-                  </div>
-                <label className="block text-[11px] text-theme-muted mt-4 mb-1.5">
-                  Auto delete done tasks after
-                </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={settings.autoDeleteHours}
-                      onChange={(event) => setAutoDeleteHours(event.target.value)}
-                      className="input-field py-2"
-                    />
-                    <span className="text-xs text-theme-muted">hours</span>
-                  </div>
-                <p className="text-[10px] text-theme-muted mt-2">
-                  Only tasks in the Done column are removed. Todo, in progress, and notes are kept. Default is 6 hours. Set to 0 to disable.
-                </p>
-                </div>
-              )}
-            </div>
-            <button
-              onClick={() => openAdd('global')}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg btn-primary text-xs font-medium"
-            >
-              <IconPlus className="w-4 h-4" />
-              New task
-            </button>
-          </>
+          <button
+            onClick={() => openAdd('global')}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg btn-primary text-xs font-medium"
+          >
+            <IconPlus className="w-4 h-4" />
+            New task
+          </button>
         )}
       />
 

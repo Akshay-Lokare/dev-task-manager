@@ -20,6 +20,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+html.dark {
+  color-scheme: dark;
+}
+
 ::-webkit-scrollbar {
   width: 4px;
 }
@@ -38,6 +42,42 @@ input, textarea, select, button {
 @layer components {
   .app-shell {
     @apply bg-canvas dark:bg-zinc-950;
+  }
+
+  .splash-screen {
+    @apply fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-canvas dark:bg-zinc-950;
+  }
+
+  .splash-icon {
+    @apply w-24 h-24 rounded-2xl object-cover shadow-lg ring-1 ring-line/80 dark:ring-zinc-800;
+    animation: splash-icon-in 0.5s ease-out both;
+  }
+
+  .splash-title {
+    @apply text-2xl font-semibold tracking-tight text-theme-ink;
+    animation: splash-title-in 0.6s ease-out 0.1s both;
+  }
+
+  @keyframes splash-icon-in {
+    from {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes splash-title-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .surface-panel {
@@ -70,8 +110,8 @@ input, textarea, select, button {
   }
 
   .dark .task-card-todo {
-    background: linear-gradient(135deg, rgba(80, 7, 36, 0.55) 0%, rgba(15, 23, 42, 0.4) 100%);
-    border-color: rgba(236, 72, 153, 0.14);
+    background: #be185d;
+    border-color: rgba(244, 114, 182, 0.45);
   }
 
   .task-card-inprogress {
@@ -80,18 +120,18 @@ input, textarea, select, button {
   }
 
   .dark .task-card-inprogress {
-    background: linear-gradient(135deg, rgba(46, 16, 101, 0.55) 0%, rgba(15, 23, 42, 0.4) 100%);
-    border-color: rgba(139, 92, 246, 0.14);
+    background: #7c3aed;
+    border-color: rgba(167, 139, 250, 0.45);
   }
 
   .task-card-done {
-    background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 55%, #f8fafc 100%);
-    border-color: rgba(52, 211, 153, 0.22);
+    background: linear-gradient(135deg, #ccfbf1 0%, #f0fdfa 55%, #fafafa 100%);
+    border-color: rgba(45, 212, 191, 0.28);
   }
 
   .dark .task-card-done {
-    background: linear-gradient(135deg, rgba(6, 78, 59, 0.55) 0%, rgba(15, 23, 42, 0.4) 100%);
-    border-color: rgba(52, 211, 153, 0.14);
+    background: #0d9488;
+    border-color: rgba(45, 212, 191, 0.45);
   }
 
   .task-column-header {
@@ -103,15 +143,15 @@ input, textarea, select, button {
   }
 
   .column-icon-todo {
-    @apply bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300;
+    @apply bg-pink-100 text-pink-700 dark:bg-pink-500/25 dark:text-pink-300;
   }
 
   .column-icon-inprogress {
-    @apply bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300;
+    @apply bg-violet-100 text-violet-700 dark:bg-violet-500/25 dark:text-violet-300;
   }
 
   .column-icon-done {
-    @apply bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300;
+    @apply bg-teal-100 text-teal-700 dark:bg-teal-400/25 dark:text-teal-300;
   }
 
   .assignee-chip {
@@ -119,18 +159,37 @@ input, textarea, select, button {
   }
 
   .assignee-chip-todo {
-    @apply border-pink-500/75 dark:border-pink-600/65
-      bg-pink-300/85 dark:bg-pink-950/75 text-pink-950 dark:text-pink-200;
+    @apply border-pink-500/40 dark:border-pink-400/50
+      bg-pink-100 dark:bg-pink-500/20 text-pink-800 dark:text-pink-200;
   }
 
   .assignee-chip-inprogress {
-    @apply border-violet-500/75 dark:border-violet-600/65
-      bg-violet-300/85 dark:bg-violet-950/75 text-violet-950 dark:text-violet-200;
+    @apply border-violet-500/40 dark:border-violet-400/50
+      bg-violet-100 dark:bg-violet-500/20 text-violet-800 dark:text-violet-200;
   }
 
   .assignee-chip-done {
-    @apply border-emerald-500/75 dark:border-emerald-600/65
-      bg-emerald-300/85 dark:bg-emerald-950/75 text-emerald-950 dark:text-emerald-200;
+    @apply border-teal-500/40 dark:border-teal-400/50
+      bg-teal-100 dark:bg-teal-400/20 text-teal-800 dark:text-teal-200;
+  }
+
+  .task-tag-chip {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wide ring-1 ring-inset;
+  }
+
+  .task-tag-chip-todo {
+    @apply bg-pink-500/10 text-pink-700 ring-pink-500/20
+      dark:bg-pink-400/15 dark:text-pink-200 dark:ring-pink-400/25;
+  }
+
+  .task-tag-chip-inprogress {
+    @apply bg-violet-500/10 text-violet-700 ring-violet-500/20
+      dark:bg-violet-400/15 dark:text-violet-200 dark:ring-violet-400/25;
+  }
+
+  .task-tag-chip-done {
+    @apply bg-teal-500/10 text-teal-700 ring-teal-500/20
+      dark:bg-teal-400/15 dark:text-teal-200 dark:ring-teal-400/25;
   }
 
   .text-theme-ink {
@@ -146,7 +205,15 @@ input, textarea, select, button {
   }
 
   .input-field {
-    @apply w-full bg-canvas dark:bg-zinc-950 border border-line dark:border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-theme-ink placeholder:text-theme-muted focus:outline-none focus:border-pink-500 dark:focus:border-pink-400 focus:ring-2 focus:ring-pink-500/15 transition-all;
+    @apply w-full bg-canvas dark:bg-zinc-950 border border-line dark:border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-theme-ink placeholder:text-theme-muted focus:outline-none focus:border-pink-500 dark:focus:border-pink-400 focus:ring-2 focus:ring-pink-500/15 transition-[border-color,box-shadow];
+  }
+
+  select.input-field {
+    @apply text-theme-ink dark:text-zinc-100;
+  }
+
+  select.input-field option {
+    @apply bg-white text-ink dark:bg-zinc-900 dark:text-zinc-100;
   }
 
   .input-field[type='date'] {
@@ -155,6 +222,24 @@ input, textarea, select, button {
 
   .input-field[type='date']::-webkit-calendar-picker-indicator {
     @apply opacity-50 cursor-pointer dark:invert;
+  }
+
+  .name-autocomplete-menu {
+    @apply absolute z-50 left-0 right-0 mt-1.5 overflow-hidden rounded-xl border border-line dark:border-zinc-700
+      bg-white dark:bg-zinc-900 shadow-xl max-h-44 overflow-y-auto;
+  }
+
+  .name-autocomplete-heading {
+    @apply px-3 pt-2.5 pb-1 text-[10px] font-medium uppercase tracking-wide text-theme-muted;
+  }
+
+  .name-autocomplete-option {
+    @apply w-full text-left px-3 py-2 text-[13px] text-theme-ink transition-colors
+      hover:bg-violet-50 dark:hover:bg-violet-500/10;
+  }
+
+  .name-autocomplete-option-active {
+    @apply bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-200;
   }
 
   .task-date-input {
@@ -202,43 +287,63 @@ input, textarea, select, button {
   }
 
   .filter-tone-violet.filter-toggle-active {
-    @apply bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300;
+    @apply bg-violet-100 text-violet-700 dark:bg-violet-500/30 dark:text-violet-200;
   }
 
   .filter-tone-cyan.filter-toggle-active {
-    @apply bg-cyan-100 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300;
+    @apply bg-cyan-100 text-cyan-700 dark:bg-cyan-500/30 dark:text-cyan-200;
   }
 
   .filter-tone-teal.filter-toggle-active {
-    @apply bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300;
+    @apply bg-teal-100 text-teal-700 dark:bg-teal-500/30 dark:text-teal-200;
   }
 
   .filter-tone-indigo.filter-toggle-active {
-    @apply bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300;
+    @apply bg-indigo-100 text-indigo-700 dark:bg-indigo-500/30 dark:text-indigo-200;
   }
 
   .filter-tone-zinc.filter-toggle-active {
-    @apply bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200;
+    @apply bg-zinc-200 text-zinc-700 dark:bg-zinc-500/30 dark:text-zinc-200;
   }
 
   .filter-tone-amber.filter-toggle-active {
-    @apply bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300;
-  }
-
-  .filter-tone-rose.filter-toggle-active {
-    @apply bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300;
-  }
-
-  .filter-tone-pink.filter-toggle-active {
-    @apply bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300;
+    @apply bg-amber-100 text-amber-800 dark:bg-amber-500/30 dark:text-amber-200;
   }
 
   .filter-tone-emerald.filter-toggle-active {
-    @apply bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300;
+    @apply bg-emerald-100 text-emerald-800 dark:bg-emerald-500/30 dark:text-emerald-200;
+  }
+
+  .filter-tone-green.filter-toggle-active {
+    @apply bg-green-100 text-green-700 dark:bg-green-500/25 dark:text-green-300;
+  }
+
+  .filter-tone-yellow.filter-toggle-active {
+    @apply bg-yellow-100 text-yellow-700 dark:bg-yellow-400/20 dark:text-yellow-200;
+  }
+
+  .filter-tone-light-red.filter-toggle-active {
+    @apply bg-red-100 text-red-500 dark:bg-red-400/20 dark:text-red-300;
+  }
+
+  .filter-tone-red.filter-toggle-active {
+    @apply bg-red-100 text-red-700 dark:bg-red-500/30 dark:text-red-200;
+  }
+
+  .filter-tone-rose.filter-toggle-active {
+    @apply bg-rose-100 text-rose-700 dark:bg-rose-500/30 dark:text-rose-200;
+  }
+
+  .filter-tone-pink.filter-toggle-active {
+    @apply bg-pink-100 text-pink-700 dark:bg-pink-500/30 dark:text-pink-200;
+  }
+
+  .filter-tone-turquoise.filter-toggle-active {
+    @apply bg-teal-100 text-teal-700 dark:bg-teal-400/30 dark:text-teal-200;
   }
 
   .filter-pill {
-    @apply relative inline-flex items-center gap-1.5 h-7 max-w-[140px] pl-2.5 pr-2 rounded-full text-[11px] font-medium transition-all;
+    @apply relative inline-flex items-center gap-1.5 h-7 max-w-[140px] pl-2.5 pr-2 rounded-full text-[11px] font-medium transition-[background-color,border-color,box-shadow];
   }
 
   .filter-pill-idle {
@@ -250,19 +355,32 @@ input, textarea, select, button {
   }
 
   .filter-tone-cyan.filter-pill-active {
-    @apply bg-cyan-50 text-cyan-800 border-cyan-200/80 dark:bg-cyan-950/40 dark:text-cyan-200 dark:border-cyan-800/60;
+    @apply bg-cyan-50 text-cyan-800 border-cyan-200/80 dark:bg-cyan-500/20 dark:text-cyan-200 dark:border-cyan-400/40;
   }
 
   .filter-tone-teal.filter-pill-active {
-    @apply bg-teal-50 text-teal-800 border-teal-200/80 dark:bg-teal-950/40 dark:text-teal-200 dark:border-teal-800/60;
+    @apply bg-teal-50 text-teal-800 border-teal-200/80 dark:bg-teal-500/20 dark:text-teal-200 dark:border-teal-400/40;
+  }
+
+  .filter-tone-indigo.filter-pill-active {
+    @apply bg-indigo-50 text-indigo-900 border-indigo-200/80 dark:bg-indigo-500/20 dark:text-indigo-200 dark:border-indigo-400/40;
   }
 
   .filter-tone-pink.filter-pill-active {
-    @apply bg-pink-50 text-pink-900 border-pink-200/80 dark:bg-pink-950/40 dark:text-pink-200 dark:border-pink-800/60;
+    @apply bg-pink-50 text-pink-900 border-pink-200/80 dark:bg-pink-500/20 dark:text-pink-200 dark:border-pink-400/40;
+  }
+
+  .filter-tone-amber.filter-pill-active {
+    @apply bg-amber-50 text-amber-900 border-amber-200/80 dark:bg-amber-500/20 dark:text-amber-200 dark:border-amber-400/40;
   }
 
   .filter-pill-select {
-    @apply absolute inset-0 w-full h-full opacity-0 cursor-pointer;
+    @apply absolute inset-0 w-full h-full opacity-0 cursor-pointer text-inherit;
+    color-scheme: inherit;
+  }
+
+  .filter-pill-select option {
+    @apply bg-white text-ink dark:bg-zinc-900 dark:text-zinc-100;
   }
 
   .filter-clear {

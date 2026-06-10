@@ -12,23 +12,23 @@ export const PRIORITY_THEME = {
   low: {
     label: 'Low',
     Icon: IconPriorityLow,
-    text: 'text-zinc-400 dark:text-zinc-500',
-    selected: 'bg-zinc-100 text-zinc-600 border-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-600',
-    idle: 'border-line dark:border-zinc-700 text-theme-muted hover:border-zinc-300 dark:hover:border-zinc-600',
+    text: 'text-green-600 dark:text-green-400',
+    selected: 'bg-green-50 text-green-700 border-green-300 dark:bg-green-950/40 dark:text-green-300 dark:border-green-700',
+    idle: 'border-line dark:border-zinc-700 text-theme-muted hover:border-green-300 dark:hover:border-green-700',
   },
   mid: {
     label: 'Mid',
     Icon: IconPriorityMid,
-    text: 'text-amber-600 dark:text-amber-400',
-    selected: 'bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-700',
-    idle: 'border-line dark:border-zinc-700 text-theme-muted hover:border-amber-300 dark:hover:border-amber-700',
+    text: 'text-yellow-400 dark:text-yellow-300',
+    selected: 'bg-yellow-50 text-yellow-600 border-yellow-200 dark:bg-yellow-500/15 dark:text-yellow-200 dark:border-yellow-600/40',
+    idle: 'border-line dark:border-zinc-700 text-theme-muted hover:border-yellow-200 dark:hover:border-yellow-600/40',
   },
   high: {
     label: 'High',
     Icon: IconPriorityHigh,
-    text: 'text-rose-600 dark:text-rose-400',
-    selected: 'bg-rose-50 text-rose-700 border-rose-300 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-700',
-    idle: 'border-line dark:border-zinc-700 text-theme-muted hover:border-rose-300 dark:hover:border-rose-700',
+    text: 'text-red-400 dark:text-red-300',
+    selected: 'bg-red-50 text-red-500 border-red-200 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/40',
+    idle: 'border-line dark:border-zinc-700 text-theme-muted hover:border-red-200 dark:hover:border-red-500/40',
   },
 }
 

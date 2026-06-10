@@ -32,7 +32,7 @@ export const TYPE_THEME = {
     headerGlow: 'from-indigo-400/25 via-sky-300/10 to-transparent dark:from-indigo-500/20 dark:via-sky-400/5',
     formSelected: 'bg-grad-global text-white border-transparent shadow-md shadow-indigo-500/25',
     formIdle: 'border-line dark:border-zinc-700 text-theme-muted hover:ring-1 hover:ring-indigo-400/30',
-    contextKey: null,
-    contextLabel: null,
+    contextKey: 'globalName',
+    contextLabel: 'Global',
   },
 }

@@ -25,18 +25,28 @@ const load = async () => {
 }
 
 const getDoneTaskExpiryTime = (task) => {
+  if (task.completedAt) {
+    const completedAt = Date.parse(task.completedAt)
+    if (!Number.isNaN(completedAt)) return completedAt
+  }
+
+  const updatedAt = Date.parse(task.updatedAt ?? '')
+  if (!Number.isNaN(updatedAt)) return updatedAt
+
   const endValue = task.endDate ? Date.parse(`${task.endDate}T12:00:00`) : NaN
   if (!Number.isNaN(endValue)) return endValue
-  const value = Date.parse(task.updatedAt ?? task.createdAt ?? '')
-  return Number.isNaN(value) ? Date.now() : value
+
+  return Date.now()
 }
 
 const applyStatusDates = (task, status) => {
   const next = { ...task, status }
   if (status === 'done') {
     next.endDate = todayDateString()
+    next.completedAt = new Date().toISOString()
   } else if (task.status === 'done') {
     next.endDate = ''
+    next.completedAt = ''
   }
   return next
 }
@@ -64,10 +74,13 @@ const useTaskStore = create((set, get) => ({
       type: taskData.type,           // 'sprint' | 'branch' | 'global'
       sprintName: taskData.sprintName?.trim() ?? '',
       branchName: taskData.branchName?.trim() ?? '',
+      globalName: taskData.globalName?.trim() ?? '',
       assignedTo: taskData.assignedTo?.trim() ?? '',
       priority: taskData.priority ?? 'mid',
-      startDate: todayDateString(),
+      tag: taskData.tag?.trim() ?? '',
+      startDate: taskData.startDate?.trim() || todayDateString(),
       endDate: '',
+      completedAt: '',
       notes: taskData.notes?.trim() ?? '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -147,14 +160,19 @@ const useTaskStore = create((set, get) => ({
   getByType: (type) => get().tasks.filter((t) => t.type === type),
 
   getContextLabels: (type) => {
-    const tasks = get().tasks.filter((t) => t.type === type)
-    if (type === 'sprint') {
-      return [...new Set(tasks.map((t) => t.sprintName).filter(Boolean))]
+    const fieldByType = {
+      sprint: 'sprintName',
+      branch: 'branchName',
+      global: 'globalName',
     }
-    if (type === 'branch') {
-      return [...new Set(tasks.map((t) => t.branchName).filter(Boolean))]
-    }
-    return []
+    const field = fieldByType[type]
+    if (!field) return []
+
+    return [...new Set(
+      get().tasks
+        .map((task) => task[field]?.trim())
+        .filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
   },
 }))
 

@@ -4,8 +4,10 @@ export const DEFAULT_TASK_FILTERS = {
   status: 'all',
   sprintName: 'all',
   branchName: 'all',
+  globalName: 'all',
   priority: 'all',
   assignedTo: 'all',
+  tag: 'all',
 }
 
 export function getTaskFilterOptions(tasks) {
@@ -17,11 +19,19 @@ export function getTaskFilterOptions(tasks) {
     tasks.map((t) => t.branchName?.trim()).filter(Boolean)
   )].sort((a, b) => a.localeCompare(b))
 
+  const globalNames = [...new Set(
+    tasks.map((t) => t.globalName?.trim()).filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b))
+
   const assignees = [...new Set(
     tasks.map((t) => t.assignedTo?.trim()).filter(Boolean)
   )].sort((a, b) => a.localeCompare(b))
 
-  return { sprintNames, branchNames, assignees }
+  const tags = [...new Set(
+    tasks.map((t) => t.tag?.trim()).filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b))
+
+  return { sprintNames, branchNames, globalNames, assignees, tags }
 }
 
 export function hasActiveFilters(filters) {
@@ -42,12 +52,20 @@ export function filterTasks(tasks, filters) {
       if ((task.branchName?.trim() ?? '') !== filters.branchName) return false
     }
 
+    if (filters.globalName !== 'all') {
+      if ((task.globalName?.trim() ?? '') !== filters.globalName) return false
+    }
+
     if (filters.priority !== 'all') {
       if ((task.priority ?? 'mid') !== filters.priority) return false
     }
 
     if (filters.assignedTo !== 'all') {
       if ((task.assignedTo?.trim() ?? '') !== filters.assignedTo) return false
+    }
+
+    if (filters.tag !== 'all') {
+      if ((task.tag?.trim() ?? '') !== filters.tag) return false
     }
 
     return true

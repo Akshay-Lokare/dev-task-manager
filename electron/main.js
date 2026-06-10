@@ -12,8 +12,9 @@ const appId = 'com.dev.tasktracker'
 const resolveIconPath = (fileName) => {
   const candidates = [
     path.join(process.resourcesPath, 'build', fileName),
-    path.join(process.resourcesPath, 'app.asar', 'build', fileName),
+    path.join(process.resourcesPath, 'app.asar.unpacked', 'build', fileName),
     path.join(__dirname, '..', 'build', fileName),
+    path.join(process.resourcesPath, 'app.asar', 'build', fileName),
   ]
 
   for (const candidate of candidates) {
@@ -97,7 +98,10 @@ function toggleMainWindow() {
 function createTray() {
   if (tray) return
 
-  const trayIcon = nativeImage.createFromPath(trayIconPath).resize({ width: 16, height: 16 })
+  const traySource = nativeImage.createFromPath(trayIconPath)
+  const trayIcon = traySource.isEmpty()
+    ? nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 })
+    : traySource.resize({ width: 16, height: 16 })
   tray = new Tray(trayIcon)
   tray.setToolTip('MeowLogger')
   tray.on('click', toggleMainWindow)

@@ -1,6 +1,6 @@
 {
   "name": "meowlogger",
-  "version": "2.1.0",
+  "version": "2.6.2",
   "description": "MeowLogger: a desktop dev task tracker built with Electron, React, and Vite",
   "main": "electron/main.js",
   "scripts": {
@@ -51,12 +51,20 @@
       "uninstallerIcon": "build/icon.ico",
       "installerHeaderIcon": "build/icon.ico"
     },
+    "extraResources": [
+      {
+        "from": "build",
+        "to": "build",
+        "filter": [
+          "icon.ico",
+          "icon.png",
+          "icon-256.png"
+        ]
+      }
+    ],
     "files": [
       "dist/**/*",
-      "electron/**/*",
-      "build/icon.png",
-      "build/icon-256.png",
-      "build/icon.ico"
+      "electron/**/*"
     ]
   }
 }

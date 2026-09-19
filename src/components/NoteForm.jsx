@@ -4,7 +4,9 @@ import useTaskStore from '../store/useTaskStore'
 import useSettingsStore from '../store/useSettingsStore'
 import { IconClose, TYPE_ICONS } from './Icons'
 import { NAME_PLACEHOLDERS_BY_MODE, normalizeUserMode } from '../constants/userMode'
+import { needsCloseConfirmWithoutContextName } from '../utils/confirmModalClose'
 import { resolveTypeTheme } from '../utils/typeLabels'
+import MissingContextNameDialog from './MissingContextNameDialog'
 import NameAutocompleteInput, { filterNameSuggestions } from './NameAutocompleteInput'
 
 const NOTE_TYPES = ['sprint', 'branch']
@@ -23,6 +25,7 @@ export default function NoteForm({ onClose, editNote = null, defaultType = 'spri
   const [saveState, setSaveState] = useState('idle')
   const [noteId, setNoteId] = useState(editNote?.id ?? null)
   const [dirty, setDirty] = useState(false)
+  const [exitConfirmOpen, setExitConfirmOpen] = useState(false)
   const titleRef = useRef(null)
   const noteIdRef = useRef(editNote?.id ?? null)
   const saveTimerRef = useRef(null)
@@ -89,11 +92,29 @@ export default function NoteForm({ onClose, editNote = null, defaultType = 'spri
   }[saveState]
 
   const labelClass = 'block text-[11px] text-theme-muted mb-1.5'
+  const typeTheme = resolveTypeTheme(type, typeLabels)
+
+  const handleClose = () => {
+    const hasOtherInput = dirty || Boolean(title.trim() || content.trim() || noteId)
+    if (needsCloseConfirmWithoutContextName(typeTheme.contextLabel, contextName, hasOtherInput)) {
+      setExitConfirmOpen(true)
+      return
+    }
+    window.clearTimeout(saveTimerRef.current)
+    onClose()
+  }
+
+  const handleLeaveWithoutSaving = () => {
+    setExitConfirmOpen(false)
+    window.clearTimeout(saveTimerRef.current)
+    onClose()
+  }
 
   return (
+    <>
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 dark:bg-black/50 backdrop-blur-[1px]"
-      onClick={(event) => event.target === event.currentTarget && onClose()}
+      onClick={(event) => event.target === event.currentTarget && !exitConfirmOpen && handleClose()}
     >
       <div className="surface-panel rounded-xl w-full max-w-md mx-4 overflow-hidden shadow-xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-theme bg-gradient-to-r from-pink-500/5 via-transparent to-transparent dark:from-pink-500/10">
@@ -108,7 +129,7 @@ export default function NoteForm({ onClose, editNote = null, defaultType = 'spri
             </p>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="text-theme-muted hover:text-theme-ink transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-canvas dark:hover:bg-zinc-800"
           >
             <IconClose />
@@ -178,11 +199,18 @@ export default function NoteForm({ onClose, editNote = null, defaultType = 'spri
             />
           </div>
 
-          <button type="button" onClick={onClose} className="w-full py-2.5 rounded-lg btn-ghost text-sm">
+          <button type="button" onClick={handleClose} className="w-full py-2.5 rounded-lg btn-ghost text-sm">
             Close
           </button>
         </div>
       </div>
     </div>
+    <MissingContextNameDialog
+      open={exitConfirmOpen}
+      contextLabel={typeTheme.contextLabel}
+      onStay={() => setExitConfirmOpen(false)}
+      onLeave={handleLeaveWithoutSaving}
+    />
+    </>
   )
 }

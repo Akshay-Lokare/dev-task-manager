@@ -5,7 +5,13 @@ import { IconClose, IconUser, TYPE_ICONS } from './Icons'
 import { PRIORITIES, PRIORITY_THEME } from '../constants/priority'
 import { NAME_PLACEHOLDERS_BY_MODE, normalizeUserMode } from '../constants/userMode'
 import { formatTaskDate, todayDateString } from '../utils/dates'
+import {
+  getContextNameForType,
+  hasRequiredContextName,
+  needsCloseConfirmWithoutContextName,
+} from '../utils/confirmModalClose'
 import { resolveTypeTheme } from '../utils/typeLabels'
+import MissingContextNameDialog from './MissingContextNameDialog'
 import NameAutocompleteInput, { filterNameSuggestions } from './NameAutocompleteInput'
 
 const FORM_TYPES = ['sprint', 'branch', 'global']
@@ -104,6 +110,7 @@ export default function TaskForm({ onClose, editTask = null, defaultType = 'glob
   const [saveState, setSaveState] = useState('idle')
   const [taskId, setTaskId] = useState(editTask?.id ?? null)
   const [dirty, setDirty] = useState(false)
+  const [exitConfirmOpen, setExitConfirmOpen] = useState(false)
   const titleRef = useRef(null)
   const taskIdRef = useRef(editTask?.id ?? null)
   const saveTimerRef = useRef(null)
@@ -167,7 +174,11 @@ export default function TaskForm({ onClose, editTask = null, defaultType = 'glob
 
   const executeSave = async () => {
     const data = formRef.current
-    if (!data.title.trim() || isCompletedView) return false
+    if (
+      !data.title.trim()
+      || !hasRequiredContextName(data.type, data)
+      || isCompletedView
+    ) return false
 
     setSaveState('saving')
     const payload = {
@@ -211,7 +222,7 @@ export default function TaskForm({ onClose, editTask = null, defaultType = 'glob
   useEffect(() => {
     if (isCompletedView || !dirty) return undefined
 
-    if (!title.trim()) {
+    if (!title.trim() || !hasRequiredContextName(type, { sprintName, branchName, globalName })) {
       setSaveState('idle')
       return undefined
     }
@@ -229,26 +240,57 @@ export default function TaskForm({ onClose, editTask = null, defaultType = 'glob
     setDirty(true)
     applyState()
     formRef.current = { ...formRef.current, ...patch }
-    if (formRef.current.title.trim()) {
+    if (
+      formRef.current.title.trim()
+      && hasRequiredContextName(formRef.current.type, formRef.current)
+    ) {
       window.clearTimeout(saveTimerRef.current)
       void executeSave()
     }
   }
 
-  const handleClose = async () => {
+  const completeClose = async (saveIfPossible) => {
     window.clearTimeout(saveTimerRef.current)
-    if (title.trim() && dirty) {
+    if (
+      saveIfPossible
+      && title.trim()
+      && hasRequiredContextName(type, { sprintName, branchName, globalName })
+      && dirty
+    ) {
       await executeSave()
     }
     onClose()
   }
 
+  const handleClose = async () => {
+    const typeTheme = resolveTypeTheme(type, typeLabels)
+    const contextName = getContextNameForType(type, { sprintName, branchName, globalName })
+    const hasOtherInput = dirty || Boolean(
+      title.trim() || description.trim() || assignedTo.trim() || tag || taskId
+    )
+    if (needsCloseConfirmWithoutContextName(typeTheme.contextLabel, contextName, hasOtherInput)) {
+      setExitConfirmOpen(true)
+      return
+    }
+    await completeClose(true)
+  }
+
+  const handleLeaveWithoutSaving = () => {
+    setExitConfirmOpen(false)
+    void completeClose(false)
+  }
+
+  const saveTypeTheme = resolveTypeTheme(type, typeLabels)
+  const saveContextName = getContextNameForType(type, { sprintName, branchName, globalName })
+
   const saveLabel = {
     idle: !title.trim()
       ? 'Title required to save'
-      : taskId
-        ? 'All changes saved'
-        : 'Start typing to save',
+      : !saveContextName.trim()
+        ? `Fill in ${saveTypeTheme.contextLabel} name to save`
+        : taskId
+          ? 'All changes saved'
+          : 'Start typing to save',
     saving: 'Saving…',
     saved: 'Saved',
     error: 'Could not save',
@@ -261,10 +303,13 @@ export default function TaskForm({ onClose, editTask = null, defaultType = 'glob
     onClose()
   }
 
+  const closeConfirmTypeTheme = resolveTypeTheme(type, typeLabels)
+
   return (
+    <>
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 dark:bg-black/50 backdrop-blur-[1px]"
-      onClick={(e) => e.target === e.currentTarget && handleClose()}
+      onClick={(e) => e.target === e.currentTarget && !exitConfirmOpen && handleClose()}
     >
       <div className="surface-panel rounded-xl w-full max-w-md mx-4 overflow-hidden shadow-xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-theme bg-gradient-to-r from-pink-500/5 via-transparent to-transparent dark:from-pink-500/10">
@@ -470,5 +515,12 @@ export default function TaskForm({ onClose, editTask = null, defaultType = 'glob
         )}
       </div>
     </div>
+    <MissingContextNameDialog
+      open={exitConfirmOpen}
+      contextLabel={closeConfirmTypeTheme.contextLabel}
+      onStay={() => setExitConfirmOpen(false)}
+      onLeave={handleLeaveWithoutSaving}
+    />
+    </>
   )
 }

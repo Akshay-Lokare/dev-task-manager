@@ -398,4 +398,85 @@ input, textarea, select, button {
   .btn-ghost {
     @apply border border-line dark:border-zinc-700 text-theme-muted hover:text-theme-ink hover:bg-canvas dark:hover:bg-zinc-800 transition-colors;
   }
+
+  .checklist-list {
+    @apply space-y-0.5;
+  }
+
+  .checklist-row {
+    @apply flex w-full items-start gap-2.5 p-0 text-left bg-transparent border-0 cursor-pointer
+      focus-visible:outline-none;
+  }
+
+  .checklist-box {
+    @apply mt-0.5 h-4 w-4 flex-shrink-0 rounded-[5px] border-2 border-zinc-300/90 dark:border-zinc-600
+      bg-white dark:bg-zinc-950 shadow-sm transition-all duration-150
+      flex items-center justify-center text-white;
+  }
+
+  .checklist-box-checked {
+    @apply border-pink-500 bg-pink-500 dark:border-pink-400 dark:bg-pink-500 shadow-sm shadow-pink-500/25;
+  }
+
+  .checklist-box-disabled {
+    @apply border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 opacity-50;
+  }
+
+  .checklist-label {
+    @apply flex-1 min-w-0 text-[13px] leading-snug text-theme-ink break-words pt-px;
+  }
+
+  .checklist-label-done {
+    @apply line-through text-zinc-500 dark:text-zinc-400 decoration-zinc-400/80 dark:decoration-zinc-500/80;
+  }
+
+  .checklist-field {
+    @apply w-full min-h-[10.5rem] max-h-60 overflow-y-auto bg-transparent border border-line dark:border-zinc-700
+      rounded-lg px-3 py-2 text-sm text-theme-ink
+      focus-within:border-pink-500 dark:focus-within:border-pink-400 focus-within:ring-2 focus-within:ring-pink-500/15
+      transition-[border-color,box-shadow];
+  }
+
+  .checklist-row-form {
+    @apply flex items-center gap-2 pr-1;
+  }
+
+  .checklist-input {
+    @apply flex-1 min-w-0 bg-transparent py-1.5 text-[13px] leading-snug outline-none text-theme-ink placeholder:text-theme-muted;
+  }
+
+  .checklist-input-done {
+    @apply line-through text-zinc-500 dark:text-zinc-400 decoration-zinc-400/80 dark:decoration-zinc-500/80;
+  }
+
+  .confirm-dialog-overlay {
+    @apply fixed inset-0 z-[60] flex items-center justify-center bg-black/45 dark:bg-black/60 backdrop-blur-[2px] px-4;
+  }
+
+  .confirm-dialog-panel {
+    @apply w-full max-w-sm rounded-xl border border-line dark:border-zinc-700 bg-panel dark:bg-zinc-900
+      shadow-2xl shadow-black/20 dark:shadow-black/50 p-6;
+  }
+
+  .confirm-dialog-title {
+    @apply text-sm font-semibold text-theme-ink tracking-tight;
+  }
+
+  .confirm-dialog-body {
+    @apply mt-2 text-[13px] leading-relaxed text-theme-muted;
+  }
+
+  .confirm-dialog-actions {
+    @apply mt-5 flex flex-col-reverse sm:flex-row sm:justify-end gap-2;
+  }
+
+  .confirm-dialog-btn-stay {
+    @apply w-full sm:w-auto px-4 py-2.5 rounded-lg btn-primary text-xs font-medium;
+  }
+
+  .confirm-dialog-btn-leave {
+    @apply w-full sm:w-auto px-4 py-2.5 rounded-lg border border-line dark:border-zinc-600
+      text-xs font-medium text-theme-muted hover:text-danger hover:border-red-200 hover:bg-red-50
+      dark:hover:border-red-900/60 dark:hover:bg-red-950/30 dark:hover:text-red-300 transition-colors;
+  }
 }
